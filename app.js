@@ -27,6 +27,7 @@ io.on("connection", (socket) => {
   socket.on('message', data => {
     const { position, letter, iterator } = data
     boardGuesses[position - 1] = letter
+    console.log('Sending only to non-senders')
     socket.broadcast.emit("FromAPI", boardGuesses);
   });
 
