@@ -19,15 +19,13 @@ const io = socketIo(server, {
   }
 });
 
-let boardGuesses = ['t', 'a', null, null, null, false, null, null, null, null, false, null, null, null, null, null, null, null, null, null, false, null, null, null, null, false, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, null, null, null, false, false, null, null, null, null, false, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, false, null, null, null, false, null, null, null, null, false, false, false, null, null, null, false, null, null, null, null, false, false, false, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, false, false, null, null, null, null, false, null, null, null, false, false, false, null, null, null, null, false, null, null, null, false, null, null, null, null, null, null, false, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, false, false, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, null, null, null, false, null, null, null, null, false, null, null, null, null, null, null, null, null, null, false, null, null, null, null, false, null, null, null, null, null]
+let boardGuesses = [null, null, null, null, null, false, null, null, null, null, false, null, null, null, null, null, null, null, null, null, false, null, null, null, null, false, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, null, null, null, false, false, null, null, null, null, false, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, false, null, null, null, false, null, null, null, null, false, false, false, null, null, null, false, null, null, null, null, false, false, false, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, false, false, null, null, null, null, false, null, null, null, false, false, false, null, null, null, null, false, null, null, null, false, null, null, null, null, null, null, false, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, false, false, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, null, null, null, false, null, null, null, null, false, null, null, null, null, null, null, null, null, null, false, null, null, null, null, false, null, null, null, null, null]
 
 io.on("connection", (socket) => {
-  console.log("New client connected");
   getBoardAndEmit(socket)
 
   socket.on('message', data => {
     const { position, letter, iterator } = data
-    console.log('message received!', data)
     boardGuesses[position - 1] = letter
     io.sockets.emit("FromAPI", boardGuesses);
   });
