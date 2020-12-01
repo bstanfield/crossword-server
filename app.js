@@ -19,14 +19,15 @@ const io = socketIo(server, {
   }
 });
 
-const randomColors = ['#FCEE7F', '#FF2865', '#A13BE0', '#28CBFF']
+const randomColors = ['#FF2865', '#A13BE0', '#28CBFF']
 
-let boardGuesses = ['', '', '', '', false, '', '', '', '', '', false, '', '', '', '', '', '', '', '', false, '', '', '', '', '', false, '', '', '', '', '', '', '', '', '', '', '', '', '', '', false, '', '', '', '', '', '', '', '', '', '', false, '', '', '', '', '', '', '', '', false, false, '', '', '', false, '', '', '', '', '', '', '', '', '', '', '', '', false, '', '', '', false, '', '', '', '', false, false, false, '', '', '', '', '', '', '', '', false, false, '', '', '', '', '', '', '', '', '', false, '', '', '', '', '', false, '', '', '', '', '', '', '', '', '', false, false, '', '', '', '', '', '', '', '', false, false, false, '', '', '', '', false, '', '', '', false, '', '', '', '', '', '', '', '', '', '', '', '', false, '', '', '', false, false, '', '', '', '', '', '', '', '', false, '', '', '', '', '', '', '', '', '', '', false, '', '', '', '', '', '', '', '', '', '', '', '', '', '', false, '', '', '', '', '', false, '', '', '', '', '', '', '', '', false, '', '', '', '', '', false, '', '', '', '']
+let boardGuesses = ["", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", false, "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", false, "", "", "", false, false, false, "", "", "", false, "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", false, "", "", "", false, false, false, "", "", "", false, "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", false, "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", ""]
 let clientsHighlights = {}
 let connectedClients = {}
 
 io.on("connection", (socket) => {
-  socket.emit('inputChange', boardGuesses);
+  socket.emit('boardGuesses', boardGuesses);
+  socket.emit('id', socket.id)
   console.log('New client: ', socket.id);
 
   // Assigns a color for the client
@@ -44,16 +45,14 @@ io.on("connection", (socket) => {
       const { position, letter, iterator } = value;
 
       boardGuesses[position - 1] = letter;
-      socket.broadcast.emit('inputChange', boardGuesses);
+      socket.broadcast.emit('inputChange', { position: position - 1, letter });
     }
 
     // Sends highlight information for clients
     if (type === 'newHighlight') {
       const { id } = socket;
       const color = connectedClients[id]
-      console.log('A player highlighted a new clue.')
       clientsHighlights[id] = { squares: value, color }
-      console.log('sending this: ', clientsHighlights)
       socket.broadcast.emit('newHighlight', clientsHighlights)
     }
   });
