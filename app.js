@@ -19,11 +19,12 @@ const io = socketIo(server, {
   }
 });
 
-const randomColors = ['#FF2865', '#A13BE0', '#28CBFF']
+const randomColors = [{ high: 'rgba(255, 40, 101, 1)', low: 'rgba(255, 40, 101, 0.2)' }, { high: 'rgba(161, 59, 224, 1)', low: 'rgba(161, 59, 224, 0.2)' }, { high: 'rgba(40, 203, 255, 1)', low: 'rgba(40, 203, 255, 0.2)' }]
 
-let boardGuesses = ["", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, false, false, "", "", "", false, false, false, "", "", "", "", false, false, "", "", "", "", false, "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", false, "", "", "", "", false, false, "", "", "", "", false, false, false, "", "", "", false, false, false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", ""]
+let boardGuesses = ["", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, false, false, "", "", "", "", false, false, false, false, false, "", "", "", "", "", "", "", "", "", "", "", "", "", false, false, false, "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", false, false, false, "", "", "", "", "", "", "", "", "", "", "", "", "", false, false, false, false, false, "", "", "", "", false, false, false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", ""]
 let clientsHighlights = {}
 let connectedClients = {}
+let assignedColors = 0
 
 io.on("connection", (socket) => {
   socket.emit('boardGuesses', boardGuesses);
@@ -31,7 +32,13 @@ io.on("connection", (socket) => {
   console.log('New client: ', socket.id);
 
   // Assigns a color for the client
-  connectedClients[socket.id] = randomColors[Math.floor(Math.random() * randomColors.length)]
+  connectedClients[socket.id] = randomColors[assignedColors]
+  assignedColors++
+
+  // hardcoded to number of randomColors
+  if (assignedColors > 2) {
+    assignedColors = 0
+  }
 
   // Tell all clients # of clients
   io.emit('newPlayer', connectedClients)
@@ -59,17 +66,17 @@ io.on("connection", (socket) => {
 
 
   socket.on("disconnect", () => {
-    console.log('~~~~~~~~~~~')
-    console.log(`${socket.id} disconnected`);
-    console.log('connected clients: ', connectedClients)
+    // console.log('~~~~~~~~~~~')
+    // console.log(`${socket.id} disconnected`);
+    // console.log('connected clients: ', connectedClients)
     const clientToDelete = connectedClients[socket.id];
     if (clientToDelete) {
-      console.log('Deleted client')
+      // console.log('Deleted client')
       delete connectedClients[socket.id];
       delete clientsHighlights[socket.id];
       io.emit('newPlayer', connectedClients)
       io.emit('newHighlight', clientsHighlights)
-      console.log('~~~~~~~~~~~')
+      // console.log('~~~~~~~~~~~')
     }
   });
 });
