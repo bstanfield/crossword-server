@@ -21,14 +21,19 @@ const io = socketIo(server, {
 
 const randomColors = ['red', 'purple', 'blue']
 
-let boardGuesses = ["", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", false, "", "", "", "", false, false, false, "", "", "", "", false, "", "", "", false, false, false, false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, false, "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", false, false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, false, false, false, "", "", "", false, "", "", "", "", false, false, false, "", "", "", "", false, "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", ""]
+let boardGuesses = ["", "", "", false, false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", false, false, "", "", "", "", "", "", "", "", "", false, "", "", "", false, "", "", "", "", "", "", "", "", "", "", false, false, "", "", "", "", false, "", "", "", "", "", false, false, false, "", "", "", "", "", "", "", "", "", false, false, false, "", "", "", "", "", false, "", "", "", "", false, false, "", "", "", "", "", "", "", "", "", "", false, "", "", "", false, "", "", "", "", "", "", "", "", "", false, false, "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, false, "", "", ""]
 let clientsHighlights = {}
 let connectedClients = {}
 let assignedColors = 0
+let secondsElapsed = 0
+setInterval(() => {
+  secondsElapsed++
+}, 1000)
 
 io.on("connection", (socket) => {
   socket.emit('boardGuesses', boardGuesses);
   socket.emit('id', socket.id)
+  socket.emit('secondsElapsed', secondsElapsed)
   console.log('New client: ', socket.id);
 
   // Assigns a color for the client
