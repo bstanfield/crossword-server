@@ -19,7 +19,7 @@ const io = socketIo(server, {
   }
 });
 
-const randomColors = [{ high: 'rgba(255, 40, 101, 1)', low: 'rgba(255, 40, 101, 0.2)' }, { high: 'rgba(161, 59, 224, 1)', low: 'rgba(161, 59, 224, 0.2)' }, { high: 'rgba(40, 203, 255, 1)', low: 'rgba(40, 203, 255, 0.2)' }]
+const randomColors = ['red', 'purple', 'blue']
 
 let boardGuesses = ["", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", false, false, false, "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", false, false, "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", false, false, "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", false, false, "", "", "", "", false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", false, false, "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", false, false, false, "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", ""]
 let clientsHighlights = {}
@@ -60,6 +60,7 @@ io.on("connection", (socket) => {
       const { id } = socket;
       const color = connectedClients[id]
       clientsHighlights[id] = { squares: value, color }
+      console.log('client highlights: ', clientsHighlights)
       socket.broadcast.emit('newHighlight', clientsHighlights)
     }
   });
