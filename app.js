@@ -20,300 +20,92 @@ const io = socketIo(server, {
   },
 });
 
+const instantiateGuesses = (grid) => grid.map(item => {
+  if (item === '.') {
+    return false
+  } else {
+    return ''
+  }
+})
+
 const getPuzzle = async () => {
-  const puzzle = await findNewPuzzle('Monday');
-  console.log('puzzle: ', puzzle)
+  const board = await findNewPuzzle('Monday');
+  const { grid } = board
+  const guesses = instantiateGuesses(grid)
+  return { board, guesses }
 }
 
 const randomColors = ["red", "purple", "blue"];
-getPuzzle()
 
 const startTime = Date.now();
-let boardGuesses = [
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  false,
-  false,
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  false,
-  "",
-  "",
-  "",
-  "",
-  false,
-  false,
-  false,
-  "",
-  "",
-  "",
-  "",
-  false,
-  false,
-  false,
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  false,
-  false,
-  false,
-  "",
-  "",
-  "",
-  "",
-  false,
-  false,
-  false,
-  "",
-  "",
-  "",
-  "",
-  false,
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  false,
-  false,
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-  "",
-  false,
-  "",
-  "",
-  "",
-  "",
-];
 let clientsHighlights = {};
 let connectedClients = {};
 let assignedColors = 0;
 
-io.on("connection", (socket) => {
-  socket.emit("boardGuesses", boardGuesses);
-  socket.emit("id", socket.id);
-  socket.emit("timestamp", startTime);
-  console.log("New client: ", socket.id);
+const startSocketServer = async () => {
+  const puzzle = await getPuzzle();
+  const { board, guesses } = puzzle;
+  io.on("connection", (socket) => {
+    console.log('sending board: ', board)
+    socket.emit("board", board);
+    socket.emit("guesses", guesses);
+    socket.emit("id", socket.id);
+    socket.emit("timestamp", startTime);
+    console.log("New client: ", socket.id);
 
-  // Assigns a color for the client
-  connectedClients[socket.id] = randomColors[assignedColors];
-  assignedColors++;
+    // Assigns a color for the client
+    connectedClients[socket.id] = randomColors[assignedColors];
+    assignedColors++;
 
-  // hardcoded to number of randomColors
-  if (assignedColors > 2) {
-    assignedColors = 0;
-  }
-
-  // Tell all clients # of clients
-  io.emit("newPlayer", connectedClients);
-
-  socket.on("message", (data) => {
-    console.log(`Client ${socket.id} sent a message.`);
-    const { type, value } = data;
-
-    // Registers a square input letter change
-    if (type === "input") {
-      const { position, letter, iterator } = value;
-
-      boardGuesses[position - 1] = letter;
-      socket.broadcast.emit("inputChange", { position: position - 1, letter });
+    // hardcoded to number of randomColors
+    if (assignedColors > 2) {
+      assignedColors = 0;
     }
 
-    // Sends highlight information for clients
-    if (type === "newHighlight") {
-      const { id } = socket;
-      const color = connectedClients[id];
-      clientsHighlights[id] = { squares: value, color };
-      console.log("client highlights: ", clientsHighlights);
-      socket.broadcast.emit("newHighlight", clientsHighlights);
-    }
-  });
+    // Tell all clients # of clients
+    io.emit("newPlayer", connectedClients);
 
-  socket.on("disconnect", () => {
-    // console.log('~~~~~~~~~~~')
-    // console.log(`${socket.id} disconnected`);
-    // console.log('connected clients: ', connectedClients)
-    const clientToDelete = connectedClients[socket.id];
-    if (clientToDelete) {
-      // console.log('Deleted client')
-      delete connectedClients[socket.id];
-      delete clientsHighlights[socket.id];
-      io.emit("newPlayer", connectedClients);
-      io.emit("newHighlight", clientsHighlights);
+    socket.on("message", (data) => {
+      console.log(`Client ${socket.id} sent a message.`);
+      const { type, value } = data;
+
+      // Registers a square input letter change
+      if (type === "input") {
+        const { position, letter, iterator } = value;
+
+        guesses[position - 1] = letter;
+        socket.broadcast.emit("inputChange", { position: position - 1, letter });
+      }
+
+      // Sends highlight information for clients
+      if (type === "newHighlight") {
+        const { id } = socket;
+        const color = connectedClients[id];
+        clientsHighlights[id] = { squares: value, color };
+        console.log("client highlights: ", clientsHighlights);
+        socket.broadcast.emit("newHighlight", clientsHighlights);
+      }
+    });
+
+    socket.on("disconnect", () => {
       // console.log('~~~~~~~~~~~')
-    }
+      // console.log(`${socket.id} disconnected`);
+      // console.log('connected clients: ', connectedClients)
+      const clientToDelete = connectedClients[socket.id];
+      if (clientToDelete) {
+        // console.log('Deleted client')
+        delete connectedClients[socket.id];
+        delete clientsHighlights[socket.id];
+        io.emit("newPlayer", connectedClients);
+        io.emit("newHighlight", clientsHighlights);
+        // console.log('~~~~~~~~~~~')
+      }
+    });
   });
-});
+}
+
+startSocketServer();
+
+
 
 server.listen(port, () => console.log(`Listening on port ${port}`));
