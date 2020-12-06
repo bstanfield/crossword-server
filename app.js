@@ -4,7 +4,7 @@ const socketIo = require("socket.io");
 
 const port = process.env.PORT || 4001;
 const index = require("./routes/index");
-const cors = require('cors');
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
@@ -15,58 +15,283 @@ const server = http.createServer(app);
 
 const io = socketIo(server, {
   cors: {
-    origin: '*',
-  }
+    origin: "*",
+  },
 });
 
-const randomColors = ['red', 'purple', 'blue']
+const randomColors = ["red", "purple", "blue"];
 
-const startTime = Date.now()
-let boardGuesses = ["", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, false, false, "", "", "", "", "", false, false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, false, "", "", "", "", false, false, false, "", "", "", "", false, false, false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", false, false, false, "", "", "", "", false, false, false, "", "", "", "", false, false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, false, "", "", "", "", "", false, false, false, "", "", "", "", false, "", "", "", "", "", "", "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", "", "", "", "", "", false, "", "", "", "", "", false, "", "", "", ""]
-let clientsHighlights = {}
-let connectedClients = {}
-let assignedColors = 0
+const startTime = Date.now();
+let boardGuesses = [
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  false,
+  false,
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  false,
+  "",
+  "",
+  "",
+  "",
+  false,
+  false,
+  false,
+  "",
+  "",
+  "",
+  "",
+  false,
+  false,
+  false,
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  false,
+  false,
+  false,
+  "",
+  "",
+  "",
+  "",
+  false,
+  false,
+  false,
+  "",
+  "",
+  "",
+  "",
+  false,
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  false,
+  false,
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+  "",
+  false,
+  "",
+  "",
+  "",
+  "",
+];
+let clientsHighlights = {};
+let connectedClients = {};
+let assignedColors = 0;
 
 io.on("connection", (socket) => {
-  socket.emit('boardGuesses', boardGuesses);
-  socket.emit('id', socket.id)
-  socket.emit('timestamp', startTime)
-  console.log('New client: ', socket.id);
+  socket.emit("boardGuesses", boardGuesses);
+  socket.emit("id", socket.id);
+  socket.emit("timestamp", startTime);
+  console.log("New client: ", socket.id);
 
   // Assigns a color for the client
-  connectedClients[socket.id] = randomColors[assignedColors]
-  assignedColors++
+  connectedClients[socket.id] = randomColors[assignedColors];
+  assignedColors++;
 
   // hardcoded to number of randomColors
   if (assignedColors > 2) {
-    assignedColors = 0
+    assignedColors = 0;
   }
 
   // Tell all clients # of clients
-  io.emit('newPlayer', connectedClients)
+  io.emit("newPlayer", connectedClients);
 
-  socket.on('message', data => {
+  socket.on("message", (data) => {
     console.log(`Client ${socket.id} sent a message.`);
-    const { type, value } = data
+    const { type, value } = data;
 
     // Registers a square input letter change
-    if (type === 'input') {
+    if (type === "input") {
       const { position, letter, iterator } = value;
 
       boardGuesses[position - 1] = letter;
-      socket.broadcast.emit('inputChange', { position: position - 1, letter });
+      socket.broadcast.emit("inputChange", { position: position - 1, letter });
     }
 
     // Sends highlight information for clients
-    if (type === 'newHighlight') {
+    if (type === "newHighlight") {
       const { id } = socket;
-      const color = connectedClients[id]
-      clientsHighlights[id] = { squares: value, color }
-      console.log('client highlights: ', clientsHighlights)
-      socket.broadcast.emit('newHighlight', clientsHighlights)
+      const color = connectedClients[id];
+      clientsHighlights[id] = { squares: value, color };
+      console.log("client highlights: ", clientsHighlights);
+      socket.broadcast.emit("newHighlight", clientsHighlights);
     }
   });
-
 
   socket.on("disconnect", () => {
     // console.log('~~~~~~~~~~~')
@@ -77,8 +302,8 @@ io.on("connection", (socket) => {
       // console.log('Deleted client')
       delete connectedClients[socket.id];
       delete clientsHighlights[socket.id];
-      io.emit('newPlayer', connectedClients)
-      io.emit('newHighlight', clientsHighlights)
+      io.emit("newPlayer", connectedClients);
+      io.emit("newHighlight", clientsHighlights);
       // console.log('~~~~~~~~~~~')
     }
   });

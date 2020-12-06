@@ -1,26 +1,53 @@
-const fs = require('fs').promises;
-const util = require('util');
+const fs = require("fs").promises;
+const util = require("util");
 
 var myArgs = process.argv.slice(2);
 
 const findNewPuzzle = async (dayOfWeek) => {
-  let options = []
-  let years
-  let monthGroupings
-  let dayGroupings
+  let options = [];
+  let years;
+  let monthGroupings;
+  let dayGroupings;
   try {
-    years = await fs.readdir('./crosswords')
+    years = await fs.readdir("./crosswords");
     // Arrays of months per year
-    monthGroupings = await Promise.all(years.map(year => fs.readdir(`./crosswords/${year}`)))
+    monthGroupings = await Promise.all(
+      years.map((year) => fs.readdir(`./crosswords/${year}`))
+    );
     // Array per year with array per month
-    dayGroupings = await Promise.all(monthGroupings.map(async (monthGrouping, index) => await Promise.all(monthGrouping.map(month => fs.readdir(`./crosswords/${years[index]}/${month}`)))))
-    console.log('day groupings: ', dayGroupings)
-    crosswords = await Promise.all(dayGroupings.map(async (yearGrouping, yearIndex) => await Promise.all(yearGrouping.map(async (month, monthIndex) => await Promise.all(month.map(fileName => fs.readFile(`./crosswords/${years[yearIndex]}/${monthGroupings[yearIndex][monthIndex]}/${fileName}`, 'utf-8')))))))
-    console.log('crosswords: ', crosswords)
+    dayGroupings = await Promise.all(
+      monthGroupings.map(
+        async (monthGrouping, index) =>
+          await Promise.all(
+            monthGrouping.map((month) =>
+              fs.readdir(`./crosswords/${years[index]}/${month}`)
+            )
+          )
+      )
+    );
+    console.log("day groupings: ", dayGroupings);
+    crosswords = await Promise.all(
+      dayGroupings.map(
+        async (yearGrouping, yearIndex) =>
+          await Promise.all(
+            yearGrouping.map(
+              async (month, monthIndex) =>
+                await Promise.all(
+                  month.map((fileName) =>
+                    fs.readFile(
+                      `./crosswords/${years[yearIndex]}/${monthGroupings[yearIndex][monthIndex]}/${fileName}`,
+                      "utf-8"
+                    )
+                  )
+                )
+            )
+          )
+      )
+    );
+    return crosswords
   } catch (err) {
-    console.log('err: ', err)
+    console.log("err: ", err);
   }
-
 
   // fs.readdir('./crosswords', 'utf8', (err, years) => {
   //   if (err) {
@@ -59,13 +86,10 @@ const findNewPuzzle = async (dayOfWeek) => {
   //   })
   // })
   return years;
-}
+};
 
 const run = async () => {
-  const results = await findNewPuzzle(myArgs[0])
-  console.log('results: ', results)
-}
+  const results = await findNewPuzzle(myArgs[0]);
+};
 
-run()
-
-
+run();
