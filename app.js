@@ -1,7 +1,7 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
-const { getCrosswordsByDay } = require('./data')
+const { findNewPuzzle } = require('./data')
 
 const port = process.env.PORT || 4001;
 const index = require("./routes/index");
@@ -20,9 +20,13 @@ const io = socketIo(server, {
   },
 });
 
+const getPuzzle = async () => {
+  const puzzle = await findNewPuzzle('Monday');
+  console.log('puzzle: ', puzzle)
+}
+
 const randomColors = ["red", "purple", "blue"];
-const crosswords = getCrosswordsByDay('Monday');
-console.log('crosswords: ', crosswords)
+getPuzzle()
 
 const startTime = Date.now();
 let boardGuesses = [

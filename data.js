@@ -2,12 +2,23 @@ const glob = require('glob-promise');
 const fs = require("fs").promises;
 
 
-const findNewPuzzle = async (dayOfWeek) => {
+const findNewPuzzle = async (dow) => {
   const filePaths = await glob('crosswords/**/*.json');
-  const crosswordData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))
-  const crosswordDataAsJSON = crosswordData.map(cw => JSON.parse(cw))
+  const cwData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))
+  const cwJSON = cwData.map(cw => JSON.parse(cw))
 
-  const allCrosswordsFromDayOfWeek = crosswordDataAsJSON.filter(cw => cw.dow === dayOfWeek)
-  const randomCrossword = allCrosswordsFromDayOfWeek[Math.floor(Math.random() * allCrosswordsFromDayOfWeek.length)];
-  return randomCrossword;
+  const dowCrosswords = cwJSON.filter(cw => cw.dow === dow)
+  return dowCrosswords[Math.floor(Math.random() * dowCrosswords.length)];
 };
+
+// TESTING
+// const run = async () => {
+//   const puzzle = await findNewPuzzle('Monday')
+//   console.log(puzzle)
+// }
+
+// run()
+
+module.exports = {
+  findNewPuzzle
+}
