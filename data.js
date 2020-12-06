@@ -11,14 +11,6 @@ const findNewPuzzle = async (dow) => {
   return dowCrosswords[Math.floor(Math.random() * dowCrosswords.length)];
 };
 
-// TESTING
-// const run = async () => {
-//   const puzzle = await findNewPuzzle('Monday')
-//   console.log(puzzle)
-// }
-
-// run()
-
 module.exports = {
   findNewPuzzle
 }
