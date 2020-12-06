@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
+const { getCrosswordsByDay } = require('./data')
 
 const port = process.env.PORT || 4001;
 const index = require("./routes/index");
@@ -20,6 +21,8 @@ const io = socketIo(server, {
 });
 
 const randomColors = ["red", "purple", "blue"];
+const crosswords = getCrosswordsByDay('Monday');
+console.log('crosswords: ', crosswords)
 
 const startTime = Date.now();
 let boardGuesses = [
