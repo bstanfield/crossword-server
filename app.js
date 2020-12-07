@@ -29,7 +29,7 @@ const instantiateGuesses = (grid) => grid.map(item => {
 })
 
 const getPuzzle = async () => {
-  // Hardcoded days for now
+  // Hardcoded day for now
   const board = await findNewPuzzle('Monday');
   const { grid } = board
   const guesses = instantiateGuesses(grid)
