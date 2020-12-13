@@ -30,7 +30,7 @@ const instantiateGuesses = (grid) => grid.map(item => {
 
 const getPuzzle = async () => {
   // Hardcoded dayz for now
-  const board = await findNewPuzzle('Wednesday');
+  const board = await findNewPuzzle('Tuesday');
   const { grid } = board
   const guesses = instantiateGuesses(grid)
   return { board, guesses }
@@ -38,18 +38,18 @@ const getPuzzle = async () => {
 
 const randomColors = ["red", "purple", "blue"];
 
-const startTime = Date.now();
+let startTime = Date.now();
 let clientsHighlights = {};
 let connectedClients = {};
 let assignedColors = 0;
 
 const startSocketServer = async () => {
-  const puzzle = await getPuzzle();
-  const { board, guesses } = puzzle;
-  io.on("connection", (socket) => {
-    console.log('sending board: ', board)
-    socket.emit("board", board);
-    socket.emit("guesses", guesses);
+  let puzzle;
+  puzzle = await getPuzzle();
+  io.on("connection", async (socket) => {
+    console.log('sending board: ', puzzle.board)
+    socket.emit("board", puzzle.board);
+    socket.emit("guesses", puzzle.guesses);
     socket.emit("id", socket.id);
     socket.emit("timestamp", startTime);
     console.log("New client: ", socket.id);
@@ -66,7 +66,7 @@ const startSocketServer = async () => {
     // Tell all clients # of clients
     io.emit("newPlayer", connectedClients);
 
-    socket.on("message", (data) => {
+    socket.on("message", async (data) => {
       console.log(`Client ${socket.id} sent a message.`);
       const { type, value } = data;
 
@@ -74,8 +74,18 @@ const startSocketServer = async () => {
       if (type === "input") {
         const { position, letter, iterator } = value;
 
-        guesses[position - 1] = letter;
+        puzzle.guesses[position - 1] = letter;
         socket.broadcast.emit("inputChange", { position: position - 1, letter });
+      }
+
+      if (type === "newPuzzle") {
+        console.log('New puzzle requested!')
+        puzzle = await getPuzzle();
+        io.emit("alert", "loading");
+        io.emit("board", puzzle.board);
+        io.emit("guesses", puzzle.guesses);
+        startTime = Date.now()
+        io.emit("timestamp", startTime)
       }
 
       // Sends highlight information for clients
