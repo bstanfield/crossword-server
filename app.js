@@ -28,9 +28,9 @@ const instantiateGuesses = (grid) => grid.map(item => {
   }
 })
 
-const getPuzzle = async () => {
+const getPuzzle = async (day) => {
   // Hardcoded dayz for now
-  const board = await findNewPuzzle('Tuesday');
+  const board = await findNewPuzzle(day || 'Monday');
   const { grid } = board
   const guesses = instantiateGuesses(grid)
   return { board, guesses }
@@ -45,8 +45,10 @@ let connectedClients = {};
 let assignedColors = 0;
 
 const startSocketServer = async () => {
+  // This will hold all active puzzle boards
+  // TODO: Add timestamp to puzzles and expire them
   let puzzles = {};
-  puzzle = await getPuzzle();
+
   io.on("connection", async (socket) => {
     console.log("New client: ", socket.id);
 
@@ -74,7 +76,7 @@ const startSocketServer = async () => {
       socket.emit("timestamp", startTime);
 
       // Add client to list of clients
-      connectedClients[socket.id] = { ...connectedClients[socket.id], ...{ room } };
+      connectedClients[socket.id] = { ...connectedClients[socket.id], ...{ room, name: 'Anon' } };
 
       // Count clients in room
       let count = 0
@@ -86,6 +88,13 @@ const startSocketServer = async () => {
 
       // Tell everyone in the room about the new client
       io.to(room).emit("newPlayer", count);
+    })
+
+    socket.on("name", (name) => {
+      if (name) {
+        console.log(socket.id, ' name is ', name);
+        connectedClients[socket.id] = { ...connectedClients[socket.id], ...{ name } };
+      }
     })
 
     // Room agnostic code
@@ -111,15 +120,14 @@ const startSocketServer = async () => {
         socket.to(room).emit("inputChange", { position: position - 1, letter });
       }
 
-      // This is quite slow...
       if (type === "newPuzzle") {
         console.log('New puzzle requested for room ', room)
 
         // Loading state for everyone in room
         io.in(room).emit("alert", "loading");
-        puzzles[room] = await getPuzzle();
-        io.in(room).emit("board", puzzles[room].board);
+        puzzles[room] = await getPuzzle(value);
         io.in(room).emit("guesses", puzzles[room].guesses);
+        io.in(room).emit("board", puzzles[room].board);
         startTime = Date.now()
         io.in(room).emit("timestamp", startTime)
 
@@ -136,8 +144,8 @@ const startSocketServer = async () => {
 
       // Sends highlight information for clients
       if (type === "newHighlight") {
-        const color = connectedClients[socket.id].color;
-        clientsHighlights[socket.id] = { squares: value, color, room };
+        const { color, name } = connectedClients[socket.id];
+        clientsHighlights[socket.id] = { squares: value, color, room, name };
 
         socket.to(room).emit("newHighlight", clientsHighlights);
       }
@@ -145,6 +153,7 @@ const startSocketServer = async () => {
 
     socket.on("disconnect", () => {
       const clientToDelete = connectedClients[socket.id];
+      console.log(socket.id, ' left ', clientToDelete.room)
       if (clientToDelete) {
         // Check room before deleting
         const room = clientToDelete.room
