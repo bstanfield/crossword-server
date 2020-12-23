@@ -44,18 +44,46 @@ let connectedClients = {};
 let assignedColors = 0;
 
 const startSocketServer = async () => {
-  let puzzle;
+  let puzzles = {};
   puzzle = await getPuzzle();
   io.on("connection", async (socket) => {
-    console.log('sending board: ', puzzle.board)
-    socket.emit("board", puzzle.board);
-    socket.emit("guesses", puzzle.guesses);
-    socket.emit("id", socket.id);
-    socket.emit("timestamp", startTime);
     console.log("New client: ", socket.id);
 
+    // Assign to room and hand down board
+    socket.on("join", async (room) => {
+      // If the room doesn't have a puzzle yet, create one
+      if (!puzzles[room]) {
+        console.log('creating puzzle for new room ', room)
+        puzzles[room] = await getPuzzle();
+      }
+
+      // Send stuff down new client
+      console.log(socket.id, 'joining ', room)
+      socket.join(room)
+
+      socket.emit("board", puzzles[room].board);
+      socket.emit("guesses", puzzles[room].guesses);
+      socket.emit("id", socket.id);
+      socket.emit("timestamp", startTime);
+
+      // Add client to list of clients
+      connectedClients[socket.id] = { ...connectedClients[socket.id], ...{ room } };
+
+      // Count clients in room
+      let count = 0
+      for (const [key, value] of Object.entries(connectedClients)) {
+        if (value.room === room) {
+          count++
+        }
+      }
+
+      // Tell everyone in the room about the new client
+      io.to(room).emit("newPlayer", count);
+    })
+
+    // Room agnostic code
     // Assigns a color for the client
-    connectedClients[socket.id] = randomColors[assignedColors];
+    connectedClients[socket.id] = { ...connectedClients[socket.id], ...{ color: randomColors[assignedColors] } };
     assignedColors++;
 
     // hardcoded to number of randomColors
@@ -63,53 +91,70 @@ const startSocketServer = async () => {
       assignedColors = 0;
     }
 
-    // Tell all clients # of clients
-    io.emit("newPlayer", connectedClients);
-
     socket.on("message", async (data) => {
       console.log(`Client ${socket.id} sent a message.`);
+      const { room } = connectedClients[socket.id];
       const { type, value } = data;
 
       // Registers a square input letter change
       if (type === "input") {
         const { position, letter, iterator } = value;
 
-        puzzle.guesses[position - 1] = letter;
-        socket.broadcast.emit("inputChange", { position: position - 1, letter });
+        puzzles[room].guesses[position - 1] = letter;
+        socket.to(room).emit("inputChange", { position: position - 1, letter });
       }
 
+      // This is quite slow...
       if (type === "newPuzzle") {
-        console.log('New puzzle requested!')
-        puzzle = await getPuzzle();
-        io.emit("alert", "loading");
-        io.emit("board", puzzle.board);
-        io.emit("guesses", puzzle.guesses);
+        console.log('New puzzle requested for room ', room)
+
+        // Loading state for everyone in room
+        io.in(room).emit("alert", "loading");
+        puzzles[room] = await getPuzzle();
+        io.in(room).emit("board", puzzles[room].board);
+        io.in(room).emit("guesses", puzzles[room].guesses);
         startTime = Date.now()
-        io.emit("timestamp", startTime)
+        io.in(room).emit("timestamp", startTime)
+
+        // Clear old highlights for room
+        let highlightsToKeep = {};
+        for (const [key, value] of Object.entries(clientsHighlights)) {
+          if (value.room !== room) {
+            highlightsToKeep[key] = value;
+          }
+        }
+        clientsHighlights = highlightsToKeep;
+        socket.to(room).emit("newHighlight", clientsHighlights);
       }
 
       // Sends highlight information for clients
       if (type === "newHighlight") {
-        const { id } = socket;
-        const color = connectedClients[id];
-        clientsHighlights[id] = { squares: value, color };
-        console.log("client highlights: ", clientsHighlights);
-        socket.broadcast.emit("newHighlight", clientsHighlights);
+        const color = connectedClients[socket.id].color;
+        clientsHighlights[socket.id] = { squares: value, color, room };
+
+        socket.to(room).emit("newHighlight", clientsHighlights);
       }
     });
 
     socket.on("disconnect", () => {
-      // console.log('~~~~~~~~~~~')
-      // console.log(`${socket.id} disconnected`);
-      // console.log('connected clients: ', connectedClients)
       const clientToDelete = connectedClients[socket.id];
       if (clientToDelete) {
-        // console.log('Deleted client')
+        // Check room before deleting
+        const room = clientToDelete.room
         delete connectedClients[socket.id];
         delete clientsHighlights[socket.id];
-        io.emit("newPlayer", connectedClients);
-        io.emit("newHighlight", clientsHighlights);
-        // console.log('~~~~~~~~~~~')
+
+        // Recount clients in room
+        let count = 0
+        for (const [key, value] of Object.entries(connectedClients)) {
+          if (value.room === room) {
+            count++
+          }
+        }
+        io.to(room).emit("newPlayer", count);
+
+        // TODO: Make highlights room specific
+        io.to(room).emit("newHighlight", clientsHighlights);
       }
     });
   });
