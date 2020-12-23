@@ -1,7 +1,4 @@
 const express = require("express");
-const bodyParser = require('body-parser');
-const url = require('url');
-const querystring = require('querystring');
 const router = express.Router();
 
 router.get("/", (req, res) => {

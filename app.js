@@ -36,6 +36,7 @@ const getPuzzle = async () => {
   return { board, guesses }
 }
 
+const validKeys = ['alpha', 'beta'];
 const randomColors = ["red", "purple", "blue"];
 
 let startTime = Date.now();
@@ -51,6 +52,12 @@ const startSocketServer = async () => {
 
     // Assign to room and hand down board
     socket.on("join", async (room) => {
+      // Reject invalid room keys
+      if (!validKeys.includes(room)) {
+        console.log('Invalid room: ', room);
+        return socket.emit("reject", "invalid key");
+      }
+
       // If the room doesn't have a puzzle yet, create one
       if (!puzzles[room]) {
         console.log('creating puzzle for new room ', room)
