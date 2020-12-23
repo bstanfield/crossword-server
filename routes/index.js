@@ -8,11 +8,11 @@ router.get("/", (req, res) => {
 const validKeys = ['alpha', 'beta'];
 router.get("/secret", (req, res) => {
   const key = req.query.key;
+
   if (validKeys.includes(key)) {
-    console.log('returning 200')
     return res.send({ sent: key }).status(200);
   }
-  console.log('returning 404')
+
   res.send({ error: 'Key not valid', sent: key }).status(404);
 });
 
