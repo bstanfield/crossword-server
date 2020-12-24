@@ -36,7 +36,8 @@ const getPuzzle = async (day) => {
   return { board, guesses }
 }
 
-const validKeys = ['alpha', 'beta'];
+// Move to env
+const validKeys = ['alpha', 'beta', 'svalbard', 'circle_sm', 'new_york', 'mississippi', 'sunderman', 'albina', 'bonsai', 'black_jeep', '2802', 'tahoe', '3_nights', 'bird_watcher', 'not_the_continent', 'nipomo', 'gridflower', 'campfire', 'persimmon', 'talbot', 'banjo'];
 const randomColors = ["red", "purple", "blue"];
 
 let startTime = Date.now();
@@ -124,7 +125,7 @@ const startSocketServer = async () => {
         console.log('New puzzle requested for room ', room)
 
         // Loading state for everyone in room
-        io.in(room).emit("alert", "loading");
+        io.in(room).emit("loading", true);
         puzzles[room] = await getPuzzle(value);
         io.in(room).emit("guesses", puzzles[room].guesses);
         io.in(room).emit("board", puzzles[room].board);
@@ -140,6 +141,7 @@ const startSocketServer = async () => {
         }
         clientsHighlights = highlightsToKeep;
         socket.to(room).emit("newHighlight", clientsHighlights);
+        io.in(room).emit("loading", false);
       }
 
       // Sends highlight information for clients
