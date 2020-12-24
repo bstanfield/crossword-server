@@ -145,7 +145,7 @@ const startSocketServer = async () => {
       // Sends highlight information for clients
       if (type === "newHighlight") {
         const { color, name } = connectedClients[socket.id];
-        clientsHighlights[socket.id] = { squares: value, color, room, name };
+        clientsHighlights[socket.id] = { squares: value, color, room, name, id: socket.id };
 
         socket.to(room).emit("newHighlight", clientsHighlights);
       }
