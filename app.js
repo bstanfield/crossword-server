@@ -81,7 +81,7 @@ const startSocketServer = async () => {
         const puzzle = await getPuzzle();
         try {
           const res = await db.query('INSERT INTO rooms(id, room_name, board_state, created_at, guesses) VALUES(${id}, ${room}, ${board}, ${created_at}, ${guesses})', {
-            id: socket.id,
+            id: 1234,
             room: 'test3',
             board: null,
             created_at: null,
