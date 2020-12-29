@@ -7,10 +7,16 @@ const port = process.env.PORT || 4001;
 const index = require("./routes/index");
 const cors = require("cors");
 
-const knex = require('knex')({
-  client: 'pg',
-  connection: process.env.DATABASE_URL,
+const { Client } = require('pg-promise');
+
+const db = new Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
+
+db.connect();
 
 const app = express();
 app.use(cors());
@@ -72,13 +78,8 @@ const startSocketServer = async () => {
 
         // Add puzzle to DB
         const puzzle = await getPuzzle();
-
-        await knex('rooms').insert({
-          board_state: puzzle.board,
-          guesses: puzzle.guesses,
-          created_at: Date.now(),
-          room_name: room,
-        })
+        const response = await db.query('SELECT * FROM rooms;');
+        console.log('response: ', response);
         puzzles[room] = puzzle
       }
 
