@@ -7,6 +7,12 @@ const port = process.env.PORT || 4001;
 const index = require("./routes/index");
 const cors = require("cors");
 
+const knex = require('knex')({
+  client: 'pg',
+  asyncStackTraces: true,
+  connection: 'postgres://jfecklpdzeravm:37e9166ad928604062524e01f8e91bbdec0a1dd48cc37a76d76eda882c6ec5fc@ec2-54-144-109-253.compute-1.amazonaws.com:5432/d9hevhsicmpo59&ssl=true',
+});
+
 const app = express();
 app.use(cors());
 
@@ -63,8 +69,18 @@ const startSocketServer = async () => {
 
       // If the room doesn't have a puzzle yet, create one
       if (!puzzles[room]) {
-        console.log('creating puzzle for new room ', room)
-        puzzles[room] = await getPuzzle();
+        console.log('creating puzzle for new room ', room);
+
+        // Add puzzle to DB
+        const puzzle = await getPuzzle();
+        console.log('inserting puzzle into DB...');
+        await knex('rooms').insert({
+          board_state: puzzle.board,
+          guesses: puzzle.guesses,
+          created_at: Date.now(),
+          room_name: room,
+        })
+        puzzles[room] = puzzle
       }
 
       // Send stuff down new client
