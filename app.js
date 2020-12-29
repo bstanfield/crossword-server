@@ -82,10 +82,10 @@ const startSocketServer = async () => {
         try {
           const res = await db.query('INSERT INTO rooms(id, room_name, board_state, created_at, guesses) VALUES(${id}, ${room}, ${board}, ${created_at}, ${guesses})', {
             id: socket.id,
-            room,
-            board: puzzle.board,
-            created_at: Date.now(),
-            guesses: puzzle.guesses,
+            room: 'test3',
+            board: null,
+            created_at: null,
+            guesses: null,
           });
           console.log('result: ', res)
         } catch (err) {
