@@ -7,16 +7,9 @@ const port = process.env.PORT || 4001;
 const index = require("./routes/index");
 const cors = require("cors");
 
-const { Client } = require('pg-promise');
+const pgp = require('pg-promise');
 
-const db = new Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
-
-db.connect();
+const db = pgp(process.env.DATABASE_URL);
 
 const app = express();
 app.use(cors());
