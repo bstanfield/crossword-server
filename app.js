@@ -72,7 +72,7 @@ const startSocketServer = async () => {
 
         // Add puzzle to DB
         const puzzle = await getPuzzle();
-        console.log('env: ', process.env.DATABASE_URL);
+        console.log('db url: ', process.env.DATABASE_URL);
         // await knex('rooms').insert({
         //   board_state: puzzle.board,
         //   guesses: puzzle.guesses,
