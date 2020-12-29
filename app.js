@@ -81,9 +81,7 @@ const startSocketServer = async () => {
         console.log('inserting puzzle into DB...');
         client.query('SELECT * FROM rooms;', (err, res) => {
           if (err) throw err;
-          for (let row of res.rows) {
-            console.log(JSON.stringify(row));
-          }
+          console.log('successful query! ', res);
           client.end();
         });
         puzzles[room] = puzzle
