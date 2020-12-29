@@ -7,9 +7,12 @@ const port = process.env.PORT || 4001;
 const index = require("./routes/index");
 const cors = require("cors");
 
-const pgp = require('pg-promise');
+const pgp = require('pg-promise')({
+  // Init details
+});
 
-const db = pgp(process.env.DATABASE_URL);
+const cn = process.env.DATABASE_URL;
+const db = pgp(cn);
 
 const app = express();
 app.use(cors());
