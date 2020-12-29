@@ -80,7 +80,8 @@ const startSocketServer = async () => {
         // Add puzzle to DB
         const puzzle = await getPuzzle();
         try {
-          const res = await db.query('INSERT INTO rooms(room_name, board_state, created_at, guesses) VALUES(${room}, ${board}, ${created_at}, ${guesses})', {
+          const res = await db.query('INSERT INTO rooms(id, room_name, board_state, created_at, guesses) VALUES(${id}, ${room}, ${board}, ${created_at}, ${guesses})', {
+            id: socket.id,
             room,
             board: puzzle.board,
             created_at: Date.now(),
