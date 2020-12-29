@@ -79,12 +79,18 @@ const startSocketServer = async () => {
 
         // Add puzzle to DB
         const puzzle = await getPuzzle();
-        await db.none('INSERT INTO rooms(room_name, board_state, created_at, guesses) VALUES(${room}, ${board}, ${created_at}, ${guesses})', {
-          room,
-          board: puzzle.board,
-          created_at: Date.now(),
-          guesses: puzzle.guesses,
-        });
+        try {
+          const res = await db.query('INSERT INTO rooms(room_name, board_state, created_at, guesses) VALUES(${room}, ${board}, ${created_at}, ${guesses})', {
+            room,
+            board: puzzle.board,
+            created_at: Date.now(),
+            guesses: puzzle.guesses,
+          });
+          console.log('result: ', res)
+        } catch (err) {
+          console.log('ERROR: ', err)
+        }
+
         puzzles[room] = puzzle
       }
 
