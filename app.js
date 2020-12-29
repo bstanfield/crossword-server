@@ -80,7 +80,9 @@ const startSocketServer = async () => {
         const puzzle = await getPuzzle();
         console.log('inserting puzzle into DB...');
         client.query('SELECT * FROM rooms;', (err, res) => {
-          if (err) throw err;
+          if (err) {
+            return console.log('err: ', err)
+          }
           console.log('successful query! ', res);
           client.end();
         });
