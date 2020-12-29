@@ -12,7 +12,12 @@ const pgp = require('pg-promise')({
 });
 
 const cn = process.env.DATABASE_URL;
-const db = pgp(cn);
+const db = pgp({
+  connectionString: cn,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 const app = express();
 app.use(cors());
