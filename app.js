@@ -76,7 +76,7 @@ const startSocketServer = async () => {
           console.log('ERROR: ', err)
         }
 
-        if (puzzleFromDB) {
+        if (puzzleFromDB.length > 0) {
           console.log('setting puzzle to: ', puzzleFromDB)
           puzzleFromDB[0].guesses = JSON.parse(puzzleFromDB[0].guesses)
           puzzle = puzzleFromDB[0];
