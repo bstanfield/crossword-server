@@ -1,23 +1,12 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
-const { findNewPuzzle } = require('./data')
+const { findNewPuzzle } = require('./data');
+const { db } = require('./db');
 
 const port = process.env.PORT || 4001;
 const index = require("./routes/index");
 const cors = require("cors");
-
-const pgp = require('pg-promise')({
-  // Init details
-});
-
-const cn = process.env.DATABASE_URL;
-const db = pgp({
-  connectionString: cn,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
 
 const app = express();
 app.use(cors());
@@ -45,6 +34,7 @@ const getPuzzle = async (day) => {
   const board = await findNewPuzzle(day || 'Monday');
   const { grid } = board
   const guesses = instantiateGuesses(grid)
+  console.log('guesses: ', guesses)
   return { board, guesses }
 }
 
@@ -75,21 +65,34 @@ const startSocketServer = async () => {
 
       // If the room doesn't have a puzzle yet, create one
       if (!puzzles[room]) {
-        console.log('creating puzzle for new room ', room);
-
-        // Add puzzle to DB
-        const puzzle = await getPuzzle();
+        // No puzzle in memory, but maybe in DB?
+        let puzzle;
+        let puzzleFromDB;
         try {
-          const res = await db.query('INSERT INTO rooms(id, room_name, board_state, created_at, guesses) VALUES(${id}, ${room}, ${board}, ${created_at}, ${guesses})', {
-            id: 1234,
-            room: 'test3',
-            board: null,
-            created_at: null,
-            guesses: null,
+          puzzleFromDB = await db.query('SELECT * FROM rooms WHERE room_name = ${room} AND created_at in (select max(created_at) from rooms WHERE room_name = ${room})', {
+            room,
           });
-          console.log('result: ', res)
         } catch (err) {
           console.log('ERROR: ', err)
+        }
+
+        if (puzzleFromDB) {
+          console.log('setting puzzle to: ', puzzleFromDB)
+          puzzleFromDB[0].guesses = JSON.parse(puzzleFromDB[0].guesses)
+          puzzle = puzzleFromDB[0];
+        } else {
+          puzzle = await getPuzzle();
+
+          try {
+            db.query('INSERT INTO rooms(room_name, board, created_at, guesses) VALUES(${room}, ${board}, ${created_at}, ${guesses})', {
+              room,
+              board: puzzle.board,
+              created_at: new Date(),
+              guesses: JSON.stringify(puzzle.guesses),
+            });
+          } catch (err) {
+            console.log('ERROR: ', err)
+          }
         }
 
         puzzles[room] = puzzle
@@ -147,6 +150,17 @@ const startSocketServer = async () => {
 
         puzzles[room].guesses[position - 1] = letter;
         socket.to(room).emit("inputChange", { position: position - 1, letter });
+
+        // Register guess in DB
+        console.log('adding new guess to DB...')
+        try {
+          db.query('UPDATE rooms SET guesses = ${guesses} WHERE room_name = ${room} AND created_at in (select max(created_at) from rooms WHERE room_name = ${room})', {
+            room,
+            guesses: JSON.stringify(puzzles[room].guesses),
+          });
+        } catch (err) {
+          console.log('ERROR: ', err)
+        }
       }
 
       if (type === "newPuzzle") {
@@ -154,7 +168,20 @@ const startSocketServer = async () => {
 
         // Loading state for everyone in room
         io.in(room).emit("loading", true);
-        puzzles[room] = await getPuzzle(value);
+        const puzzle = await getPuzzle(value);
+        puzzles[room] = puzzle;
+
+        try {
+          db.query('INSERT INTO rooms(room_name, board, created_at, guesses) VALUES(${room}, ${board}, ${created_at}, ${guesses})', {
+            room,
+            board: puzzle.board,
+            created_at: new Date(),
+            guesses: JSON.stringify(puzzle.guesses),
+          });
+        } catch (err) {
+          console.log('ERROR: ', err)
+        }
+
         io.in(room).emit("guesses", puzzles[room].guesses);
         io.in(room).emit("board", puzzles[room].board);
         startTime = Date.now()
