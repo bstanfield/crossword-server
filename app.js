@@ -2,7 +2,7 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const { findNewPuzzle } = require('./data');
-const { db } = require('./db');
+const db = require('./db');
 
 const port = process.env.PORT || 4001;
 const index = require("./routes/index");
@@ -34,7 +34,6 @@ const getPuzzle = async (day) => {
   const board = await findNewPuzzle(day || 'Monday');
   const { grid } = board
   const guesses = instantiateGuesses(grid)
-  console.log('guesses: ', guesses)
   return { board, guesses }
 }
 
@@ -59,7 +58,6 @@ const startSocketServer = async () => {
     socket.on("join", async (room) => {
       // Reject invalid room keys
       if (!validKeys.includes(room)) {
-        console.log('Invalid room: ', room);
         return socket.emit("reject", "invalid key");
       }
 
@@ -69,27 +67,19 @@ const startSocketServer = async () => {
         let puzzle;
         let puzzleFromDB;
         try {
-          puzzleFromDB = await db.query('SELECT * FROM rooms WHERE room_name = ${room} AND created_at in (select max(created_at) from rooms WHERE room_name = ${room})', {
-            room,
-          });
+          puzzleFromDB = await db.getPuzzle(room);
         } catch (err) {
           console.log('ERROR: ', err)
         }
 
         if (puzzleFromDB.length > 0) {
-          console.log('setting puzzle to: ', puzzleFromDB)
           puzzleFromDB[0].guesses = JSON.parse(puzzleFromDB[0].guesses)
           puzzle = puzzleFromDB[0];
         } else {
           puzzle = await getPuzzle();
 
           try {
-            db.query('INSERT INTO rooms(room_name, board, created_at, guesses) VALUES(${room}, ${board}, ${created_at}, ${guesses})', {
-              room,
-              board: puzzle.board,
-              created_at: new Date(),
-              guesses: JSON.stringify(puzzle.guesses),
-            });
+            db.insertPuzzle(room, puzzle.board, puzzle.guesses)
           } catch (err) {
             console.log('ERROR: ', err)
           }
@@ -140,7 +130,6 @@ const startSocketServer = async () => {
     }
 
     socket.on("message", async (data) => {
-      console.log(`Client ${socket.id} sent a message.`);
       const { room } = connectedClients[socket.id];
       const { type, value } = data;
 
@@ -152,12 +141,8 @@ const startSocketServer = async () => {
         socket.to(room).emit("inputChange", { position: position - 1, letter });
 
         // Register guess in DB
-        console.log('adding new guess to DB...')
         try {
-          db.query('UPDATE rooms SET guesses = ${guesses} WHERE room_name = ${room} AND created_at in (select max(created_at) from rooms WHERE room_name = ${room})', {
-            room,
-            guesses: JSON.stringify(puzzles[room].guesses),
-          });
+          db.updateGuesses(room, puzzles[room].guesses);
         } catch (err) {
           console.log('ERROR: ', err)
         }
@@ -172,12 +157,7 @@ const startSocketServer = async () => {
         puzzles[room] = puzzle;
 
         try {
-          db.query('INSERT INTO rooms(room_name, board, created_at, guesses) VALUES(${room}, ${board}, ${created_at}, ${guesses})', {
-            room,
-            board: puzzle.board,
-            created_at: new Date(),
-            guesses: JSON.stringify(puzzle.guesses),
-          });
+          db.insertPuzzle(room, puzzle.board, puzzle.guesses)
         } catch (err) {
           console.log('ERROR: ', err)
         }
@@ -234,7 +214,5 @@ const startSocketServer = async () => {
 }
 
 startSocketServer();
-
-
 
 server.listen(port, () => console.log(`Listening on port ${port}`));
