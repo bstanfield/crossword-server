@@ -1,7 +1,8 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
-const { findNewPuzzle } = require('./data')
+const { findNewPuzzle } = require('./data');
+const db = require('./db');
 
 const port = process.env.PORT || 4001;
 const index = require("./routes/index");
@@ -57,14 +58,34 @@ const startSocketServer = async () => {
     socket.on("join", async (room) => {
       // Reject invalid room keys
       if (!validKeys.includes(room)) {
-        console.log('Invalid room: ', room);
         return socket.emit("reject", "invalid key");
       }
 
       // If the room doesn't have a puzzle yet, create one
       if (!puzzles[room]) {
-        console.log('creating puzzle for new room ', room)
-        puzzles[room] = await getPuzzle();
+        // No puzzle in memory, but maybe in DB?
+        let puzzle;
+        let puzzleFromDB;
+        try {
+          puzzleFromDB = await db.getPuzzle(room);
+        } catch (err) {
+          console.log('ERROR: ', err)
+        }
+
+        if (puzzleFromDB.length > 0) {
+          puzzleFromDB[0].guesses = JSON.parse(puzzleFromDB[0].guesses)
+          puzzle = puzzleFromDB[0];
+        } else {
+          puzzle = await getPuzzle();
+
+          try {
+            db.insertPuzzle(room, puzzle.board, puzzle.guesses)
+          } catch (err) {
+            console.log('ERROR: ', err)
+          }
+        }
+
+        puzzles[room] = puzzle
       }
 
       // Send stuff down new client
@@ -109,7 +130,6 @@ const startSocketServer = async () => {
     }
 
     socket.on("message", async (data) => {
-      console.log(`Client ${socket.id} sent a message.`);
       const { room } = connectedClients[socket.id];
       const { type, value } = data;
 
@@ -119,6 +139,13 @@ const startSocketServer = async () => {
 
         puzzles[room].guesses[position - 1] = letter;
         socket.to(room).emit("inputChange", { position: position - 1, letter });
+
+        // Register guess in DB
+        try {
+          db.updateGuesses(room, puzzles[room].guesses);
+        } catch (err) {
+          console.log('ERROR: ', err)
+        }
       }
 
       if (type === "newPuzzle") {
@@ -126,7 +153,15 @@ const startSocketServer = async () => {
 
         // Loading state for everyone in room
         io.in(room).emit("loading", true);
-        puzzles[room] = await getPuzzle(value);
+        const puzzle = await getPuzzle(value);
+        puzzles[room] = puzzle;
+
+        try {
+          db.insertPuzzle(room, puzzle.board, puzzle.guesses)
+        } catch (err) {
+          console.log('ERROR: ', err)
+        }
+
         io.in(room).emit("guesses", puzzles[room].guesses);
         io.in(room).emit("board", puzzles[room].board);
         startTime = Date.now()
@@ -179,7 +214,5 @@ const startSocketServer = async () => {
 }
 
 startSocketServer();
-
-
 
 server.listen(port, () => console.log(`Listening on port ${port}`));
