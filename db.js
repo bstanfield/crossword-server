@@ -17,6 +17,8 @@ const db = pgp({
     },
 });
 
+const getValidKeys = async () => db.query('SELECT * FROM room_keys')
+
 // Queries
 const updateGuesses = (room, guesses) => {
   const stringifiedGuesses = JSON.stringify(guesses);
@@ -45,6 +47,7 @@ const insertPuzzle = (room, board, guesses) => {
 
 module.exports = {
   db,
+  getValidKeys,
   updateGuesses,
   getPuzzle,
   insertPuzzle,

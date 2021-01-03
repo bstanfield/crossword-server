@@ -1,14 +1,15 @@
 const express = require("express");
 const router = express.Router();
+const { getValidKeys } = require('../db');
 
 router.get("/", (req, res) => {
   res.send({ response: "I am alive" }).status(200);
 });
 
-const validKeys = ['alpha', 'beta', 'svalbard', 'circle_sm', 'new_york', 'mississippi', 'sunderman', 'albina', 'bonsai', 'black_jeep', '2802', 'tahoe', '3_nights', 'bird_watcher', 'not_the_continent', 'nipomo', 'gridflower', 'campfire', 'persimmon', 'talbot', 'banjo', 'minions', 'beemsterboss'];
-
-router.get("/secret", (req, res) => {
+router.get("/secret", async (req, res) => {
   const key = req.query.key;
+
+  const validKeys = (await getValidKeys()).map(key => key.name);
 
   if (validKeys.includes(key)) {
     return res.send({ sent: key }).status(200);

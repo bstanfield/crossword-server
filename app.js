@@ -3,6 +3,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const { findNewPuzzle } = require('./data');
 const db = require('./db');
+const { getValidKeys } = require('./db');
 
 const port = process.env.PORT || 4001;
 const index = require("./routes/index");
@@ -38,7 +39,6 @@ const getPuzzle = async (day) => {
 }
 
 // Move to Heroku env
-const validKeys = ['alpha', 'beta', 'svalbard', 'circle_sm', 'new_york', 'mississippi', 'sunderman', 'albina', 'bonsai', 'black_jeep', '2802', 'tahoe', '3_nights', 'bird_watcher', 'not_the_continent', 'nipomo', 'gridflower', 'campfire', 'persimmon', 'talbot', 'banjo', 'minions', 'beemsterboss'];
 const randomColors = ["red", "purple", "blue"];
 
 let startTime = Date.now();
@@ -50,6 +50,7 @@ const startSocketServer = async () => {
   // This will hold all active puzzle boards
   // TODO: Add timestamp to puzzles and expire them
   let puzzles = {};
+  const validKeys = (await getValidKeys()).map(key => key.name);
 
   io.on("connection", async (socket) => {
     console.log("New client: ", socket.id);
