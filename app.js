@@ -31,7 +31,6 @@ const instantiateGuesses = (grid) => grid.map(item => {
 })
 
 const getPuzzle = async (day) => {
-  // Hardcoded dayz for now
   const board = await findNewPuzzle(day || 'Monday');
   const { grid } = board
   const guesses = instantiateGuesses(grid)
@@ -89,7 +88,7 @@ const startSocketServer = async () => {
         puzzles[room] = puzzle
       }
 
-      // Send stuff down new client
+      // Send stuff down to new client
       console.log(socket.id, 'joining ', room)
       socket.join(room)
 
