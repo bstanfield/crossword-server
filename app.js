@@ -35,7 +35,7 @@ const getPuzzle = async (day) => {
   const { grid } = board
   const guesses = instantiateGuesses(grid)
   const scores = {}
-  return { board, guesses, scores }
+  return { board, guesses, scores: { claimedGuesses: [] } }
 }
 
 // Move to Heroku env
@@ -93,8 +93,11 @@ const startSocketServer = async () => {
       console.log(socket.id, 'joining ', room)
       socket.join(room)
 
+      // TODO: Combine
       socket.emit("board", puzzles[room].board);
       socket.emit("guesses", puzzles[room].guesses);
+      socket.emit("scores", puzzles[room].scores);
+
       socket.emit("id", socket.id);
       socket.emit("timestamp", startTime);
 
@@ -151,15 +154,22 @@ const startSocketServer = async () => {
         }
 
         // Check if input is actually a letter, and then if correct/incorrect
-        if (letter !== '') {
-          if (correctLetter && correctLetter.toLowerCase() === value.letter) {
+        // Checks if guess tile has already been correctly guessed by someone
+        if (
+          letter !== '' &&
+          !puzzles[room].scores.claimedGuesses.includes(position)
+        ) {
+          if (
+            correctLetter &&
+            correctLetter.toLowerCase() === letter
+          ) {
             console.log('Correct answer from ', name)
+            puzzles[room].scores.claimedGuesses.push(position);
             puzzles[room].scores[name].correct++;
           } else {
             console.log('Wrong answer from ', name)
             puzzles[room].scores[name].incorrect++;
           }
-          console.log('emitting scores: ', puzzles[room].scores)
           io.to(room).emit("scores", puzzles[room].scores);
         }
 
