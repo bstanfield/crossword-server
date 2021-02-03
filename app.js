@@ -69,6 +69,9 @@ const getPuzzle = async (day) => {
       },
       highestAccuracy: {
         // mimi: 90
+      },
+      benchwarmer: {
+        // mimi: 20
       }
     }
   }
