@@ -107,12 +107,12 @@ const startSocketServer = async () => {
         let puzzle;
         let puzzleFromDB;
         try {
-          // puzzleFromDB = await db.getPuzzle(room);
-          puzzleFromDB = [];
+          puzzleFromDB = await db.getPuzzle(room);
         } catch (err) {
           console.log('ERROR: ', err)
         }
 
+        console.log('puzzle from DB: ', puzzleFromDB)
         if (puzzleFromDB.length > 0) {
           puzzleFromDB[0].guesses = JSON.parse(puzzleFromDB[0].guesses)
           puzzle = puzzleFromDB[0];
@@ -120,7 +120,7 @@ const startSocketServer = async () => {
           puzzle = await getPuzzle();
 
           try {
-            // db.insertPuzzle(room, puzzle.board, puzzle.guesses)
+            db.insertPuzzle(room, puzzle.board, puzzle.guesses, puzzle.scores)
           } catch (err) {
             console.log('ERROR: ', err)
           }
@@ -216,7 +216,7 @@ const startSocketServer = async () => {
 
         // Register guess in DB
         try {
-          // db.updateGame(room, puzzles[room].guesses, puzzles[room].scores);
+          db.updateGame(room, puzzles[room].guesses, puzzles[room].scores);
         } catch (err) {
           console.log('ERROR: ', err)
         }
@@ -231,7 +231,7 @@ const startSocketServer = async () => {
         puzzles[room] = puzzle;
 
         try {
-          // db.insertPuzzle(room, puzzle.board, puzzle.guesses, puzzle.scores)
+          db.insertPuzzle(room, puzzle.board, puzzle.guesses, puzzle.scores)
         } catch (err) {
           console.log('ERROR: ', err)
         }
