@@ -108,9 +108,9 @@ const startSocketServer = async () => {
         let puzzleFromDB;
         try {
           puzzleFromDB = await db.getPuzzle(room);
-          console.log('puzzleFromDB.scores: ', puzzleFromDB.scores)
+          console.log('puzzleFromDB.scores: ', puzzleFromDB[0].scores)
           // Catch for old puzzles without scores
-          if (!puzzleFromDB.scores) {
+          if (!puzzleFromDB[0].scores) {
             puzzleFromDB = [];
           }
         } catch (err) {
