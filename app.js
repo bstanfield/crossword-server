@@ -1,7 +1,11 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
-const { findNewPuzzle } = require('./data');
+const {
+  findNewPuzzle,
+  createDownAndAcrossWordGroupings,
+  checkIfLetterAddsToScore
+} = require('./data');
 const db = require('./db');
 const { getValidKeys } = require('./db');
 
@@ -34,7 +38,43 @@ const getPuzzle = async (day) => {
   const board = await findNewPuzzle(day || 'Monday');
   const { grid } = board
   const guesses = instantiateGuesses(grid)
-  return { board, guesses }
+  const { across, down } = createDownAndAcrossWordGroupings(board);
+
+  return {
+    board,
+    guesses,
+    mappings: {
+      across,
+      down,
+    },
+    scores: {
+      claimedGuesses: [],
+      claimedGuessesLookup: {
+        // ben: [14, 23, 18],
+      },
+      longestWord: {
+        // ben: 'superbo'
+      },
+      finishingBlow: [
+        // mimi: 'sumo'
+      ],
+      hotStreak: {
+        // mimi: 8
+      },
+      toughLetters: {
+        // ben: 2
+      },
+      thief: {
+        // mimi: 4
+      },
+      highestAccuracy: {
+        // mimi: 90
+      },
+      benchwarmer: {
+        // mimi: 20
+      }
+    }
+  }
 }
 
 // Move to Heroku env
@@ -68,6 +108,10 @@ const startSocketServer = async () => {
         let puzzleFromDB;
         try {
           puzzleFromDB = await db.getPuzzle(room);
+          // Catch for old puzzles without scores
+          if (!puzzleFromDB[0].scores || !puzzleFromDB[0].scores.claimedGuessesLookup) {
+            puzzleFromDB = [];
+          }
         } catch (err) {
           console.log('ERROR: ', err)
         }
@@ -79,7 +123,7 @@ const startSocketServer = async () => {
           puzzle = await getPuzzle();
 
           try {
-            db.insertPuzzle(room, puzzle.board, puzzle.guesses)
+            db.insertPuzzle(room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
           } catch (err) {
             console.log('ERROR: ', err)
           }
@@ -92,8 +136,11 @@ const startSocketServer = async () => {
       console.log(socket.id, 'joining ', room)
       socket.join(room)
 
+      // TODO: Combine
       socket.emit("board", puzzles[room].board);
       socket.emit("guesses", puzzles[room].guesses);
+      socket.emit("scores", puzzles[room].scores);
+
       socket.emit("id", socket.id);
       socket.emit("timestamp", startTime);
 
@@ -131,18 +178,43 @@ const startSocketServer = async () => {
 
     socket.on("message", async (data) => {
       const { room } = connectedClients[socket.id];
-      const { type, value } = data;
+      const { name, type, value } = data;
+
+      // Catch for out-of-sync name
+      if (name !== connectedClients[socket.id].name) {
+        console.log(name, 'is not ', connectedClients[socket.id].name)
+        connectedClients[socket.id].name = name
+      }
 
       // Registers a square input letter change
       if (type === "input") {
         const { position, letter, iterator } = value;
+        const correctLetter = puzzles[room] ? puzzles[room].board.grid[position - 1] : '?';
+
+        // Check if input is actually a letter, and then if correct/incorrect
+        // Checks if guess tile has already been correctly guessed by someone
+        if (
+          letter !== '' &&
+          !puzzles[room].scores.claimedGuesses.includes(position)
+        ) {
+          if (
+            correctLetter &&
+            correctLetter.toLowerCase() === letter
+          ) {
+            checkIfLetterAddsToScore(puzzles[room], name, position, letter, true);
+
+          } else {
+            checkIfLetterAddsToScore(puzzles[room], name, position, letter, false);
+          }
+          io.to(room).emit("scores", puzzles[room].scores);
+        }
 
         puzzles[room].guesses[position - 1] = letter;
         socket.to(room).emit("inputChange", { position: position - 1, letter });
 
         // Register guess in DB
         try {
-          db.updateGuesses(room, puzzles[room].guesses);
+          db.updateGame(room, puzzles[room].guesses, puzzles[room].scores);
         } catch (err) {
           console.log('ERROR: ', err)
         }
@@ -157,7 +229,7 @@ const startSocketServer = async () => {
         puzzles[room] = puzzle;
 
         try {
-          db.insertPuzzle(room, puzzle.board, puzzle.guesses)
+          db.insertPuzzle(room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
         } catch (err) {
           console.log('ERROR: ', err)
         }
