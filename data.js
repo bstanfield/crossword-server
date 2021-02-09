@@ -154,38 +154,40 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
     }
   }
 
-  // Longest word
-  if (correct && !guesses.includes('')) {
-    const longestWord = findLongestWord(mappings, scores);
+  // Longest word (Not working rn)
+  // if (guesses.includes('')) {
+  //   const longestWord = findLongestWord(mappings, scores);
 
-    Object.entries(scores.claimedGuessesLookup).forEach(entry => {
-      const [person, values] = entry;
-      // values = [1,2,3]
-      // person = 'ben'
+  //   Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+  //     const [person, values] = entry;
+  //     // values = [1,2,3]
+  //     // person = 'ben'
 
-      // check each number in positions and if it exists in person's values
-      let successfulMapping = false;
-      for (const position of longestWord.positions) {
-        if (values.includes(position)) {
-          successfulMapping = true;
-        } else {
-          successfulMapping = false;
-          break;
-        }
-      }
+  //     // check each number in positions and if it exists in person's values
+  //     let successfulMapping = false;
+  //     for (const position of longestWord.positions) {
+  //       if (values.includes(position)) {
+  //         successfulMapping = true;
+  //       } else {
+  //         successfulMapping = false;
+  //         break;
+  //       }
+  //     }
 
-      if (successfulMapping) {
-        scores.longestWord[person] = longestWord.word;
-        console.log('MATCH: ', longestWord.word, ' from ', person);
-      } else {
-        scores.longestWord['2+ people'] = longestWord.word;
-        console.log('No one has answered longest word ', longestWord.word)
-      }
-    })
-  }
+  //     console.log('longest word: ', longestWord);
+
+  //     if (successfulMapping) {
+  //       scores.longestWord[person] = longestWord.word;
+  //       console.log('MATCH: ', longestWord.word, ' from ', person);
+  //     } else {
+  //       scores.longestWord['2+ people'] = longestWord.word;
+  //       console.log('No one has answered longest word ', longestWord.word)
+  //     }
+  //   })
+  // }
 
   // Case: Thief
-  if (correct && !guesses.includes('')) {
+  if (!guesses.includes('')) {
     // Let's start with across
     const thiefScores = {};
 

@@ -124,7 +124,7 @@ const startSocketServer = async () => {
           puzzle = await getPuzzle();
 
           try {
-            db.insertPuzzle(room, puzzle.board, puzzle.guesses, puzzle.scores)
+            db.insertPuzzle(room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
           } catch (err) {
             console.log('ERROR: ', err)
           }
@@ -235,7 +235,7 @@ const startSocketServer = async () => {
         puzzles[room] = puzzle;
 
         try {
-          db.insertPuzzle(room, puzzle.board, puzzle.guesses, puzzle.scores)
+          db.insertPuzzle(room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
         } catch (err) {
           console.log('ERROR: ', err)
         }

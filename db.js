@@ -35,13 +35,14 @@ const getPuzzle = async (room) => db.query('SELECT * FROM rooms WHERE room_name 
   room,
 });
 
-const insertPuzzle = (room, board, guesses, scores) => {
+const insertPuzzle = (room, board, mappings, guesses, scores) => {
   const stringifiedGuesses = JSON.stringify(guesses);
   const stringifiedScores = JSON.stringify(scores);
 
-  db.query('INSERT INTO rooms(room_name, board, created_at, guesses, scores) VALUES(${room}, ${board}, ${created_at}, ${guesses}, ${scores})', {
+  db.query('INSERT INTO rooms(room_name, board, mappings, created_at, guesses, scores) VALUES(${room}, ${board}, ${mappings}, ${created_at}, ${guesses}, ${scores})', {
     room,
-    board: board,
+    board,
+    mappings,
     created_at: new Date(),
     guesses: stringifiedGuesses,
     scores: stringifiedScores,
