@@ -116,7 +116,6 @@ const startSocketServer = async () => {
           console.log('ERROR: ', err)
         }
 
-        console.log('puzzle from DB: ', puzzleFromDB)
         if (puzzleFromDB.length > 0) {
           puzzleFromDB[0].guesses = JSON.parse(puzzleFromDB[0].guesses)
           puzzle = puzzleFromDB[0];
@@ -202,15 +201,10 @@ const startSocketServer = async () => {
             correctLetter &&
             correctLetter.toLowerCase() === letter
           ) {
-            console.log('Correct answer from ', name)
-            // Lock off this position
-            //
             checkIfLetterAddsToScore(puzzles[room], name, position, letter, true);
 
           } else {
-            console.log('Wrong answer from ', name)
             checkIfLetterAddsToScore(puzzles[room], name, position, letter, false);
-
           }
           io.to(room).emit("scores", puzzles[room].scores);
         }

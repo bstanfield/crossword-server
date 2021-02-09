@@ -186,45 +186,44 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   //   })
   // }
 
-  // Case: Thief
-  if (!guesses.includes('')) {
-    // Let's start with across
-    const thiefScores = {};
+  // Case: Thief (Not working rn)
+  // if (!guesses.includes('')) {
+  //   // Let's start with across
+  //   const thiefScores = {};
 
-    Object.entries(scores.claimedGuessesLookup).forEach(entry => {
-      const [person, values] = entry;
+  //   Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+  //     const [person, values] = entry;
 
-      let thiefScore = 0;
-      let isThiefForWord = 0;
-      mappings.across.map(mapping => {
-        const positionsArr = Object.values(mapping)[0];
+  //     let thiefScore = 0;
+  //     let isThiefForWord = 0;
+  //     mappings.across.map(mapping => {
+  //       const positionsArr = Object.values(mapping)[0];
 
-        // Allows for index in for loop
-        const positions = positionsArr.entries()
-        for (const [index, position] of positions) {
-          if (values.includes(position)) {
-            // Iterates by one for each answer user made in word
-            isThiefForWord++;
+  //       // Allows for index in for loop
+  //       const positions = positionsArr.entries()
+  //       for (const [index, position] of positions) {
+  //         if (values.includes(position)) {
+  //           // Iterates by one for each answer user made in word
+  //           isThiefForWord++;
 
-            // If more than 1, they are not a thief
-            if (isThiefForWord > 1) {
-              console.log(person, 'has more than 1 answer in ', mapping)
-              break;
-            }
+  //           // If more than 1, they are not a thief
+  //           if (isThiefForWord > 1) {
+  //             break;
+  //           }
 
-            // If isThiefForWord is 1 and we're at the end of a word... THIEF!
-            if (index === positionsArr.length - 1 && isThiefForWord === 1) {
-              thiefScore++;
-            }
-          }
-        }
-      })
+  //           // If isThiefForWord is 1 and we're at the end of a word... THIEF!
+  //           if (index === positionsArr.length - 1 && isThiefForWord === 1) {
+  //             thiefScore++;
+  //           }
+  //         }
+  //       }
+  //     })
 
-      thiefScores[person] = thiefScore;
-    })
+  //     thiefScores[person] = thiefScore;
+  //   })
 
-    scores.thief = thiefScores;
-  }
+  //   scores.thief = thiefScores;
+  // }
 
   // Case: Benchwarmer
   if (correct && !guesses.includes('')) {
