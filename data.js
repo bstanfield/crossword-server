@@ -225,6 +225,12 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   //   scores.thief = thiefScores;
   // }
 
+  // Is puzzle complete?
+  if (correct && !guesses.includes('')) {
+    const completed_at = new Date();
+    return completed_at;
+  }
+
   // Case: Benchwarmer
   if (correct && !guesses.includes('')) {
     let benchwarmerScores = {};

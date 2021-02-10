@@ -31,19 +31,27 @@ const updateGame = (room, guesses, scores) => {
   });
 }
 
+const insertCompletionTimestamp = (room, completed_at) => {
+  db.query('UPDATE rooms SET completed_at = ${completed_at} WHERE room_name = ${room} AND created_at in (select max(created_at) from rooms WHERE room_name = ${room})', {
+    room,
+    completed_at,
+  });
+}
+
 const getPuzzle = async (room) => db.query('SELECT * FROM rooms WHERE room_name = ${room} AND created_at in (select max(created_at) from rooms WHERE room_name = ${room})', {
   room,
 });
 
-const insertPuzzle = (room, board, mappings, guesses, scores) => {
+const insertPuzzle = (created_at, completed_at, room, board, mappings, guesses, scores) => {
   const stringifiedGuesses = JSON.stringify(guesses);
   const stringifiedScores = JSON.stringify(scores);
 
-  db.query('INSERT INTO rooms(room_name, board, mappings, created_at, guesses, scores) VALUES(${room}, ${board}, ${mappings}, ${created_at}, ${guesses}, ${scores})', {
+  db.query('INSERT INTO rooms(room_name, board, mappings, created_at, completed_at, guesses, scores) VALUES(${room}, ${board}, ${mappings}, ${created_at}, ${completed_at}, ${guesses}, ${scores})', {
     room,
     board,
     mappings,
-    created_at: new Date(),
+    created_at,
+    completed_at,
     guesses: stringifiedGuesses,
     scores: stringifiedScores,
   });
@@ -55,5 +63,6 @@ module.exports = {
   getValidKeys,
   updateGame,
   getPuzzle,
+  insertCompletionTimestamp,
   insertPuzzle,
 }
