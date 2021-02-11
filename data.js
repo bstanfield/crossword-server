@@ -154,76 +154,76 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
     }
   }
 
-  // Longest word (Not working rn)
-  // if (guesses.includes('')) {
-  //   const longestWord = findLongestWord(mappings, scores);
+  // Longest word
+  if (!guesses.includes('')) {
+    const longestWord = findLongestWord(mappings, scores);
 
-  //   Object.entries(scores.claimedGuessesLookup).forEach(entry => {
-  //     const [person, values] = entry;
-  //     // values = [1,2,3]
-  //     // person = 'ben'
+    Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+      const [person, values] = entry;
+      // values = [1,2,3]
+      // person = 'ben'
 
-  //     // check each number in positions and if it exists in person's values
-  //     let successfulMapping = false;
-  //     for (const position of longestWord.positions) {
-  //       if (values.includes(position)) {
-  //         successfulMapping = true;
-  //       } else {
-  //         successfulMapping = false;
-  //         break;
-  //       }
-  //     }
+      // check each number in positions and if it exists in person's values
+      let successfulMapping = false;
+      for (const position of longestWord.positions) {
+        if (values.includes(position)) {
+          successfulMapping = true;
+        } else {
+          successfulMapping = false;
+          break;
+        }
+      }
 
-  //     console.log('longest word: ', longestWord);
+      console.log('longest word: ', longestWord);
 
-  //     if (successfulMapping) {
-  //       scores.longestWord[person] = longestWord.word;
-  //       console.log('MATCH: ', longestWord.word, ' from ', person);
-  //     } else {
-  //       scores.longestWord['2+ people'] = longestWord.word;
-  //       console.log('No one has answered longest word ', longestWord.word)
-  //     }
-  //   })
-  // }
+      if (successfulMapping) {
+        scores.longestWord[person] = longestWord.word;
+        console.log('MATCH: ', longestWord.word, ' from ', person);
+      } else {
+        scores.longestWord['2+ people'] = longestWord.word;
+        console.log('No one has answered longest word ', longestWord.word)
+      }
+    })
+  }
 
   // Case: Thief (Not working rn)
-  // if (!guesses.includes('')) {
-  //   // Let's start with across
-  //   const thiefScores = {};
+  if (!guesses.includes('')) {
+    // Let's start with across
+    const thiefScores = {};
 
-  //   Object.entries(scores.claimedGuessesLookup).forEach(entry => {
-  //     const [person, values] = entry;
+    Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+      const [person, values] = entry;
 
-  //     let thiefScore = 0;
-  //     let isThiefForWord = 0;
-  //     mappings.across.map(mapping => {
-  //       const positionsArr = Object.values(mapping)[0];
+      let thiefScore = 0;
+      let isThiefForWord = 0;
+      mappings.across.map(mapping => {
+        const positionsArr = Object.values(mapping)[0];
 
-  //       // Allows for index in for loop
-  //       const positions = positionsArr.entries()
-  //       for (const [index, position] of positions) {
-  //         if (values.includes(position)) {
-  //           // Iterates by one for each answer user made in word
-  //           isThiefForWord++;
+        // Allows for index in for loop
+        const positions = positionsArr.entries()
+        for (const [index, position] of positions) {
+          if (values.includes(position)) {
+            // Iterates by one for each answer user made in word
+            isThiefForWord++;
 
-  //           // If more than 1, they are not a thief
-  //           if (isThiefForWord > 1) {
-  //             break;
-  //           }
+            // If more than 1, they are not a thief
+            if (isThiefForWord > 1) {
+              break;
+            }
 
-  //           // If isThiefForWord is 1 and we're at the end of a word... THIEF!
-  //           if (index === positionsArr.length - 1 && isThiefForWord === 1) {
-  //             thiefScore++;
-  //           }
-  //         }
-  //       }
-  //     })
+            // If isThiefForWord is 1 and we're at the end of a word... THIEF!
+            if (index === positionsArr.length - 1 && isThiefForWord === 1) {
+              thiefScore++;
+            }
+          }
+        }
+      })
 
-  //     thiefScores[person] = thiefScore;
-  //   })
+      thiefScores[person] = thiefScore;
+    })
 
-  //   scores.thief = thiefScores;
-  // }
+    scores.thief = thiefScores;
+  }
 
   // Is puzzle complete?
   if (correct && !guesses.includes('')) {
