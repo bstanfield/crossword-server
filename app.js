@@ -43,6 +43,8 @@ const getPuzzle = async (day) => {
   return {
     board,
     guesses,
+    created_at: new Date(),
+    completed_at: null,
     mappings: {
       across,
       down,
@@ -80,14 +82,13 @@ const getPuzzle = async (day) => {
 // Move to Heroku env
 const randomColors = ["red", "purple", "blue"];
 
-let startTime = Date.now();
 let clientsHighlights = {};
 let connectedClients = {};
 let assignedColors = 0;
 
 const startSocketServer = async () => {
   // This will hold all active puzzle boards
-  // TODO: Add timestamp to puzzles and expire them
+  // TODO: Expire puzzles
   let puzzles = {};
   const validKeys = (await getValidKeys()).map(key => key.name);
 
@@ -123,7 +124,7 @@ const startSocketServer = async () => {
           puzzle = await getPuzzle();
 
           try {
-            db.insertPuzzle(room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
+            db.insertPuzzle(puzzle.created_at, puzzle.completed_at, room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
           } catch (err) {
             console.log('ERROR: ', err)
           }
@@ -142,7 +143,9 @@ const startSocketServer = async () => {
       socket.emit("scores", puzzles[room].scores);
 
       socket.emit("id", socket.id);
-      socket.emit("timestamp", startTime);
+      socket.emit("timestamp", puzzles[room].created_at);
+      console.log("Sending completed_at: ", puzzles[room].completed_at)
+      socket.emit("completed", puzzles[room].completed_at); // might still be null -- that's OK
 
       // Add client to list of clients
       connectedClients[socket.id] = { ...connectedClients[socket.id], ...{ room, name: 'Anon' } };
@@ -201,8 +204,13 @@ const startSocketServer = async () => {
             correctLetter &&
             correctLetter.toLowerCase() === letter
           ) {
-            checkIfLetterAddsToScore(puzzles[room], name, position, letter, true);
-
+            const completed = checkIfLetterAddsToScore(puzzles[room], name, position, letter, true);
+            if (completed) {
+              console.log('****PUZZLE COMPLETE****')
+              puzzles[room].completed_at = completed;
+              io.to(room).emit("completed", puzzles[room].completed_at);
+              db.insertCompletionTimestamp(room, completed);
+            }
           } else {
             checkIfLetterAddsToScore(puzzles[room], name, position, letter, false);
           }
@@ -229,15 +237,15 @@ const startSocketServer = async () => {
         puzzles[room] = puzzle;
 
         try {
-          db.insertPuzzle(room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
+          db.insertPuzzle(puzzle.created_at, puzzle.completed_at, room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
         } catch (err) {
           console.log('ERROR: ', err)
         }
 
         io.in(room).emit("guesses", puzzles[room].guesses);
         io.in(room).emit("board", puzzles[room].board);
-        startTime = Date.now()
-        io.in(room).emit("timestamp", startTime)
+        io.in(room).emit("timestamp", puzzles[room].created_at);
+        io.in(room).emit("completed", puzzles[room].completed_at); // might still be null -- that's OK
 
         // Clear old highlights for room
         let highlightsToKeep = {};
