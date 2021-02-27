@@ -98,7 +98,6 @@ const findLongestWord = (mappings, scores) => {
 }
 
 const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => {
-  console.log('CHECKING SCORE!!');
   // mappings = mapping of answer strings to positions on board (ie 'JETS' => 1, 2, 3, 4)
   const { scores, mappings, guesses } = puzzle;
   letter = letter.toLowerCase();
@@ -135,6 +134,35 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
     } else {
       scores.toughLetters[player] = 1;
     }
+  }
+
+  // Tally incorrect guesses
+  if (!correct) {
+    console.log('INCORRECT LETTER');
+    if (scores.incorrectGuesses[player]) {
+      scores.incorrectGuesses[player].push(position);
+    } else {
+      console.log('incorrect guess at: ', position);
+      scores.incorrectGuesses[player] = [position];
+    }
+  }
+
+  // Case: Editor (TODO: rename to "Medic")
+  if (correct) {
+    Object.entries(scores.incorrectGuesses).forEach(entry => {
+      const incorrectGuessesPlayer = Object.values(entry)[0];
+      // Only look at other people's wrong guesses
+      if (incorrectGuessesPlayer !== player) {
+        if (scores.incorrectGuesses[incorrectGuessesPlayer].includes(position)) {
+          // This means someone correctly fixed a previously incorrect guess!
+          if (scores.editor[player]) {
+            scores.editor[player]++;
+          } else {
+            scores.editor[player] = 1;
+          }
+        }
+      }
+    })
   }
 
   // Case: hotStreak

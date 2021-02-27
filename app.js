@@ -54,6 +54,12 @@ const getPuzzle = async (day) => {
       claimedGuessesLookup: {
         // ben: [14, 23, 18],
       },
+      incorrectGuesses: {
+        // ben: [16, 24, 19],
+      },
+      editor: {
+        // ben: 4
+      },
       workhorse: {
         // ben: 31
       },
