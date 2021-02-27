@@ -54,6 +54,9 @@ const getPuzzle = async (day) => {
       claimedGuessesLookup: {
         // ben: [14, 23, 18],
       },
+      workhorse: {
+        // ben: 31
+      },
       longestWord: {
         // ben: 'superbo'
       },

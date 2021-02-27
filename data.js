@@ -98,9 +98,11 @@ const findLongestWord = (mappings, scores) => {
 }
 
 const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => {
+  console.log('CHECKING SCORE!!');
   // mappings = mapping of answer strings to positions on board (ie 'JETS' => 1, 2, 3, 4)
   const { scores, mappings, guesses } = puzzle;
   letter = letter.toLowerCase();
+
   // Claimed Guesses
   if (correct) {
     scores.claimedGuesses.push(position);
@@ -139,7 +141,6 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   if (correct) {
     if (scores.hotStreak[player]) {
       const lastItem = scores.hotStreak[player].length - 1;
-      // Not sure if this works
       scores.hotStreak[player][lastItem] = scores.hotStreak[player][lastItem] + 1;
     } else {
       scores.hotStreak[player] = [1];
@@ -174,61 +175,46 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
         }
       }
 
-      console.log('longest word: ', longestWord);
-
       if (successfulMapping) {
         scores.longestWord[person] = longestWord.word;
-        console.log('MATCH: ', longestWord.word, ' from ', person);
       } else {
         scores.longestWord['2+ people'] = longestWord.word;
-        console.log('No one has answered longest word ', longestWord.word)
       }
     })
   }
 
-  // Case: Thief (Not working rn)
-  if (!guesses.includes('')) {
+  // Case: Thief
+  if (correct && !guesses.includes('')) {
     // Let's start with across
     const thiefScores = {};
 
     Object.entries(scores.claimedGuessesLookup).forEach(entry => {
       const [person, values] = entry;
-
       let thiefScore = 0;
-      let isThiefForWord = 0;
-      mappings.across.map(mapping => {
-        const positionsArr = Object.values(mapping)[0];
 
-        // Allows for index in for loop
-        const positions = positionsArr.entries()
-        for (const [index, position] of positions) {
+      const wordMappings = [...mappings.across, ...mappings.down];
+
+      // Map over each word...
+      wordMappings.map(mapping => {
+        // positions = ie [0, 1, 2, 3]
+        let lettersAnsweredInWord = 0;
+        const positions = Object.values(mapping)[0];
+
+        // Map over each letter in word...
+        positions.map(position => {
           if (values.includes(position)) {
-            // Iterates by one for each answer user made in word
-            isThiefForWord++;
-
-            // If more than 1, they are not a thief
-            if (isThiefForWord > 1) {
-              break;
-            }
-
-            // If isThiefForWord is 1 and we're at the end of a word... THIEF!
-            if (index === positionsArr.length - 1 && isThiefForWord === 1) {
-              thiefScore++;
-            }
+            lettersAnsweredInWord++;
           }
+        })
+
+        if (lettersAnsweredInWord === 1) {
+          thiefScore++;
         }
       })
 
       thiefScores[person] = thiefScore;
     })
-
     scores.thief = thiefScores;
-  }
-
-  // Is puzzle complete?
-  if (correct && !guesses.includes('')) {
-    const completed_at = new Date();
-    return completed_at;
   }
 
   // Case: Benchwarmer
@@ -240,6 +226,22 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
     })
 
     scores.benchwarmer = benchwarmerScores;
+  }
+
+  // Case: Workhorse
+  if (correct && !guesses.includes('')) {
+    let workhorseScores = {};
+    Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+      const [person, values] = entry;
+      workhorseScores[person] = values.length;
+    })
+    scores.workhorse = workhorseScores;
+  }
+
+  // Is puzzle complete?
+  if (correct && !guesses.includes('')) {
+    const completed_at = new Date();
+    return completed_at;
   }
 
 }
