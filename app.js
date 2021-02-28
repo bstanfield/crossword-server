@@ -206,8 +206,8 @@ const startSocketServer = async () => {
         // Check if input is actually a letter, and then if correct/incorrect
         // Checks if guess tile has already been correctly guessed by someone
         if (
-          letter !== '' &&
-          !puzzles[room].scores.claimedGuesses.includes(position)
+          letter !== ''
+          // && !puzzles[room].scores.claimedGuesses.includes(position)
         ) {
           if (
             correctLetter &&
@@ -215,7 +215,7 @@ const startSocketServer = async () => {
           ) {
             const completed = checkIfLetterAddsToScore(puzzles[room], name, position, letter, true);
             if (completed) {
-              console.log('****PUZZLE COMPLETE****')
+              console.log('****PUZZLE COMPLETE****');
               puzzles[room].completed_at = completed;
               io.to(room).emit("completed", puzzles[room].completed_at);
               db.insertCompletionTimestamp(room, completed);

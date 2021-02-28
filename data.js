@@ -138,11 +138,9 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
 
   // Tally incorrect guesses
   if (!correct) {
-    console.log('INCORRECT LETTER');
     if (scores.incorrectGuesses[player]) {
       scores.incorrectGuesses[player].push(position);
     } else {
-      console.log('incorrect guess at: ', position);
       scores.incorrectGuesses[player] = [position];
     }
   }
@@ -199,7 +197,8 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
           successfulMapping = true;
         } else {
           successfulMapping = false;
-          break;
+          // break;
+          // ^ is this important?
         }
       }
 
@@ -212,7 +211,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: Thief
-  if (correct && !guesses.includes('')) {
+  if (!guesses.includes('')) {
     // Let's start with across
     const thiefScores = {};
 
@@ -246,7 +245,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: Benchwarmer
-  if (correct && !guesses.includes('')) {
+  if (!guesses.includes('')) {
     let benchwarmerScores = {};
     Object.entries(scores.claimedGuessesLookup).forEach(entry => {
       const [person, values] = entry;
@@ -257,7 +256,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: Workhorse
-  if (correct && !guesses.includes('')) {
+  if (!guesses.includes('')) {
     let workhorseScores = {};
     Object.entries(scores.claimedGuessesLookup).forEach(entry => {
       const [person, values] = entry;
