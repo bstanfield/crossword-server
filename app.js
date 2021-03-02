@@ -207,7 +207,6 @@ const startSocketServer = async () => {
         // Checks if guess tile has already been correctly guessed by someone
         if (
           letter !== ''
-          // && !puzzles[room].scores.claimedGuesses.includes(position)
         ) {
           if (
             correctLetter &&

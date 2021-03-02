@@ -101,9 +101,11 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   // mappings = mapping of answer strings to positions on board (ie 'JETS' => 1, 2, 3, 4)
   const { scores, mappings, guesses } = puzzle;
   letter = letter.toLowerCase();
+  const claimed = scores.claimedGuesses.includes(position);
+  const puzzleIsComplete = !guesses.includes('');
 
   // Claimed Guesses
-  if (correct) {
+  if (correct && !claimed) {
     scores.claimedGuesses.push(position);
     if (scores.claimedGuessesLookup[player]) {
       scores.claimedGuessesLookup[player].push(position);
@@ -113,7 +115,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: highestAccuracy
-  if (correct) {
+  if (correct && !claimed) {
     if (scores.highestAccuracy[player]) {
       scores.highestAccuracy[player].correct++;
     } else {
@@ -128,7 +130,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: toughLetters
-  if (correct && ['x', 'y', 'z'].includes(letter)) {
+  if (correct && ['x', 'y', 'z'].includes(letter) && !claimed) {
     if (scores.toughLetters[player]) {
       scores.toughLetters[player]++;
     } else {
@@ -146,7 +148,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: Editor (TODO: rename to "Medic")
-  if (correct) {
+  if (correct && !claimed) {
     Object.entries(scores.incorrectGuesses).forEach(entry => {
       const incorrectGuessesPlayer = Object.values(entry)[0];
       // Only look at other people's wrong guesses
@@ -164,7 +166,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: hotStreak
-  if (correct) {
+  if (correct && !claimed) {
     if (scores.hotStreak[player]) {
       const lastItem = scores.hotStreak[player].length - 1;
       scores.hotStreak[player][lastItem] = scores.hotStreak[player][lastItem] + 1;
@@ -172,7 +174,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
       scores.hotStreak[player] = [1];
     }
   }
-  if (!correct && scores.hotStreak[player]) {
+  if (!correct && scores.hotStreak[player] && !claimed) {
     const lastItem = scores.hotStreak[player].length - 1;
 
     // Prevents endless number of 0's for endless incorrect guesses
@@ -182,7 +184,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Longest word
-  if (!guesses.includes('')) {
+  if (puzzleIsComplete) {
     const longestWord = findLongestWord(mappings, scores);
 
     Object.entries(scores.claimedGuessesLookup).forEach(entry => {
@@ -211,7 +213,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: Thief
-  if (!guesses.includes('')) {
+  if (puzzleIsComplete) {
     // Let's start with across
     const thiefScores = {};
 
@@ -245,7 +247,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: Benchwarmer
-  if (!guesses.includes('')) {
+  if (puzzleIsComplete) {
     let benchwarmerScores = {};
     Object.entries(scores.claimedGuessesLookup).forEach(entry => {
       const [person, values] = entry;
@@ -256,7 +258,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: Workhorse
-  if (!guesses.includes('')) {
+  if (puzzleIsComplete) {
     let workhorseScores = {};
     Object.entries(scores.claimedGuessesLookup).forEach(entry => {
       const [person, values] = entry;
@@ -265,8 +267,10 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
     scores.workhorse = workhorseScores;
   }
 
-  // Is puzzle complete?
-  if (correct && !guesses.includes('')) {
+  // Check if puzzle is complete AND the last answer was correct
+  // TODO: This actually might not provide the 100% correct completed_at time -- puzzle should 
+  // only be complete if THERE ARE NO INCORRECTS
+  if (correct && puzzleIsComplete) {
     const completed_at = new Date();
     return completed_at;
   }
