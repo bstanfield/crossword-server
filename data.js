@@ -3,6 +3,7 @@ const fs = require("fs").promises;
 
 // HARD CODED FOR TESTING
 const findNewPuzzle = async (dow) => {
+  console.log('retrieving the hardcoded daily puzzle...');
   // WHEN DONE TESTING, REPLACE WITH /**/*.json */
   const filePaths = await glob('crosswords/Dailies/*.json');
   const cwData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))

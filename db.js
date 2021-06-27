@@ -17,8 +17,6 @@ const db = pgp({
     },
 });
 
-console.log('DB: ', db);
-
 const getValidKeys = async () => db.query('SELECT * FROM room_keys')
 
 // Queries
