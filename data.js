@@ -1,15 +1,18 @@
 const glob = require('glob-promise');
 const fs = require("fs").promises;
 
-
+// HARD CODED FOR TESTING
 const findNewPuzzle = async (dow) => {
-  const filePaths = await glob('crosswords/**/*.json');
+  // WHEN DONE TESTING, REPLACE WITH /**/*.json */
+  const filePaths = await glob('crosswords/Dailies/*.json');
   const cwData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))
   const cwJSON = cwData.map(cw => JSON.parse(cw))
 
   const fifteenByFifteenCrosswords = cwJSON.filter(cw => cw.size.cols === 15 && cw.size.rows === 15)
 
-  const dowCrosswords = fifteenByFifteenCrosswords.filter(cw => cw.dow === dow)
+  // UNCOMMENT AND REMOVE DUPLICATE LINE
+  // const dowCrosswords = fifteenByFifteenCrosswords.filter(cw => cw.dow === dow)
+  const dowCrosswords = fifteenByFifteenCrosswords;
   return dowCrosswords[Math.floor(Math.random() * dowCrosswords.length)];
 };
 
