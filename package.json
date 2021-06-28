@@ -17,6 +17,8 @@
     "glob": "^7.1.6",
     "glob-promise": "^3.4.0",
     "knex": "^0.21.15",
+    "moment": "^2.29.1",
+    "node-fetch": "^2.6.1",
     "pg": "^8.5.1",
     "pg-promise": "^10.8.6",
     "socket.io": "^3.0.3"
