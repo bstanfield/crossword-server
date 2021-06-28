@@ -5,7 +5,7 @@ const moment = require('moment');
 const fetch = require('node-fetch');
 
 // HARD CODED FOR TESTING
-const findNewPuzzle = async (dow, daily) => {
+const findNewPuzzle = async (dow, daily, dateRange) => {
   // Grabs today's crossword.
   if (daily) {
     const date = new Date;
@@ -30,10 +30,6 @@ const findNewPuzzle = async (dow, daily) => {
     const year = date.getFullYear();
     const month = months[date.getMonth()];
     const day = date.getDate();
-
-    console.log('Year: ', year);
-    console.log('Month: ', month);
-    console.log('Day: ', day);
 
     // Check if today's crossword is downloaded already.
     if (fsSync.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
@@ -126,7 +122,32 @@ const findNewPuzzle = async (dow, daily) => {
     const cwData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))
     const cwJSON = cwData.map(cw => JSON.parse(cw))
 
-    const fifteenByFifteenCrosswords = cwJSON.filter(cw => cw.size.cols === 15 && cw.size.rows === 15)
+    const filterCrosswordsByDate = (crosswords, minDate) => crosswords.filter(cw => {
+      const cwDate = new Date(cw.date);
+      const minimumDate = new Date(minDate);
+
+      if (cwDate > minimumDate) return true;
+      return false;
+    })
+
+    let fifteenByFifteenCrosswords = cwJSON.filter(cw => cw.size.cols === 15 && cw.size.rows === 15)
+    if (dateRange) {
+      if (dateRange === '2021') {
+        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2021');
+      }
+
+      if (dateRange === '2015+') {
+        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2015');
+      }
+
+      if (dateRange === '2010+') {
+        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2010');
+      }
+
+      if (dateRange === '2005+') {
+        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2005');
+      }
+    }
 
     const dowCrosswords = fifteenByFifteenCrosswords.filter(cw => cw.dow === dow)
     return dowCrosswords[Math.floor(Math.random() * dowCrosswords.length)];
