@@ -34,8 +34,8 @@ const instantiateGuesses = (grid) => grid.map(item => {
   }
 })
 
-const getPuzzle = async (day) => {
-  const board = await findNewPuzzle(day || 'Monday');
+const getPuzzle = async (day, daily) => {
+  const board = await findNewPuzzle(day || 'Monday', daily);
   const { grid } = board
   const guesses = instantiateGuesses(grid)
   const { across, down } = createDownAndAcrossWordGroupings(board);
@@ -130,7 +130,8 @@ const startSocketServer = async () => {
           puzzleFromDB[0].guesses = JSON.parse(puzzleFromDB[0].guesses)
           puzzle = puzzleFromDB[0];
         } else {
-          puzzle = await getPuzzle();
+          // This will grab today's puzzle!
+          puzzle = await getPuzzle(null, true);
 
           try {
             db.insertPuzzle(puzzle.created_at, puzzle.completed_at, room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
@@ -237,11 +238,14 @@ const startSocketServer = async () => {
       }
 
       if (type === "newPuzzle") {
-        console.log('New puzzle requested for room ', room)
+        const { dow, daily } = value;
+        console.log('New puzzle requested for room ', room);
+        console.log('Day requested: ', dow);
+        console.log('Do they want todays crossword? ', daily);
 
         // Loading state for everyone in room
         io.in(room).emit("loading", true);
-        const puzzle = await getPuzzle(value);
+        const puzzle = await getPuzzle(dow, daily);
         puzzles[room] = puzzle;
 
         try {

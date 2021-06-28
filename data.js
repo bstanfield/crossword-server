@@ -1,20 +1,136 @@
 const glob = require('glob-promise');
 const fs = require("fs").promises;
+const fsSync = require('fs');
+const moment = require('moment');
+const fetch = require('node-fetch');
 
 // HARD CODED FOR TESTING
-const findNewPuzzle = async (dow) => {
-  console.log('retrieving the hardcoded daily puzzle...');
-  // WHEN DONE TESTING, REPLACE WITH /**/*.json */
-  const filePaths = await glob('crosswords/2021/06/28.json');
-  const cwData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))
-  const cwJSON = cwData.map(cw => JSON.parse(cw))
+const findNewPuzzle = async (dow, daily) => {
+  // Grabs today's crossword.
+  if (daily) {
+    const date = new Date;
+    const today = moment(date);
+    const todayButFormatted = today.format('L');
 
-  const fifteenByFifteenCrosswords = cwJSON.filter(cw => cw.size.cols === 15 && cw.size.rows === 15)
+    const months = [
+      '01',
+      '02',
+      '03',
+      '04',
+      '05',
+      '06',
+      '07',
+      '08',
+      '09',
+      '10',
+      '11',
+      '12'
+    ]
 
-  // UNCOMMENT AND REMOVE DUPLICATE LINE
-  // const dowCrosswords = fifteenByFifteenCrosswords.filter(cw => cw.dow === dow)
-  const dowCrosswords = fifteenByFifteenCrosswords;
-  return dowCrosswords[Math.floor(Math.random() * dowCrosswords.length)];
+    const year = date.getFullYear();
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+
+    console.log('Year: ', year);
+    console.log('Month: ', month);
+    console.log('Day: ', day);
+
+    // Check if today's crossword is downloaded already.
+    if (fsSync.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
+      console.log('File exists already.')
+    } else {
+      console.log('File does not exist!', './crosswords/' + year + '/' + month + '/' + day + '.json')
+      // File doesn't exist. Download it!
+      let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + todayButFormatted;
+
+      let options = {
+        method: 'GET',
+        headers: {
+          Connection: 'keep-alive',
+          'sec-ch-ua': '" Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"',
+          'sec-ch-ua-mobile': '?0',
+          Accept: '*/*',
+          'Sec-Fetch-Site': 'cross-site',
+          'Sec-Fetch-Mode': 'no-cors',
+          'Sec-Fetch-Dest': 'empty',
+          Referer: 'http://localhost:7000/',
+          'Accept-Language': 'en-US,en;q=0.9',
+          cookie: 'ASP.NET_SessionId=rma4cngoytmp2gcyf5a2gs3l; ARRAffinity=b84cfd8a83b6d9093e8bb66a11c64ff85f40266f8f5aeef3fc332cffffb9d643; WAWebSiteSID=cef7c92e37d141f0b5bb8ef1e074db95; '
+        }
+      };
+
+      fetch(url, options)
+        .then(res => res.json())
+        .then(json => {
+          console.log('Adding file to directory!');
+
+          const findOrCreateDirectory = (year, month, day) => {
+            fsSync.access('./crosswords/' + year + '/' + month, function (error) {
+              if (error) {
+                console.log('Directory does not exist.')
+                console.log('Creating directory...');
+                fsSync.mkdirSync(process.cwd() + '/crosswords/' + year + '/' + month, { recursive: true }, (error) => {
+                  if (error) {
+                    console.error('An error occur: ', error);
+                  } else {
+                    console.log('Directory created');
+                  }
+                })
+
+                console.log('Adding JSON file...')
+                if (fsSync.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
+                  console.log('File exists already.')
+                } else {
+                  fsSync.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json), (error) => {
+                    if (error) {
+                      console.error('An error occur: ', error);
+                    } else {
+                      console.log('File added!', year, month, day);
+                    }
+                  })
+                }
+
+              } else {
+                console.log("Directory exists.")
+                console.log('Adding JSON file...')
+                if (fsSync.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
+                  console.log('File exists already.')
+                } else {
+                  fsSync.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json), (error) => {
+                    if (error) {
+                      console.error('An error occur: ', error);
+                    } else {
+                      console.log('File added!', year, month, day);
+                    }
+                  })
+                }
+              }
+            })
+          }
+
+          findOrCreateDirectory(year, months[month], day)
+
+        })
+        .catch(err => console.error('error:' + err));
+    }
+
+    const cwData = await fs.readFile('./crosswords/' + year + '/' + month + '/' + day + '.json', 'utf8');
+    const cwJSON = JSON.parse(cwData);
+
+    // TODO: MAKE SURE NOT SUNDAY
+    return cwJSON;
+  } else {
+    // TODO: ADD FILTER FOR SUNDAY DAILIES
+    // Grabs a random crossword from the Vault.
+    const filePaths = await glob('crosswords/**/*.json');
+    const cwData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))
+    const cwJSON = cwData.map(cw => JSON.parse(cw))
+
+    const fifteenByFifteenCrosswords = cwJSON.filter(cw => cw.size.cols === 15 && cw.size.rows === 15)
+
+    const dowCrosswords = fifteenByFifteenCrosswords.filter(cw => cw.dow === dow)
+    return dowCrosswords[Math.floor(Math.random() * dowCrosswords.length)];
+  }
 };
 
 const createDownAndAcrossWordGroupings = (board) => {
