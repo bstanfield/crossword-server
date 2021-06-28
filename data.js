@@ -5,7 +5,7 @@ const fs = require("fs").promises;
 const findNewPuzzle = async (dow) => {
   console.log('retrieving the hardcoded daily puzzle...');
   // WHEN DONE TESTING, REPLACE WITH /**/*.json */
-  const filePaths = await glob('crosswords/2021/28.json');
+  const filePaths = await glob('crosswords/2021/06/28.json');
   const cwData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))
   const cwJSON = cwData.map(cw => JSON.parse(cw))
 
