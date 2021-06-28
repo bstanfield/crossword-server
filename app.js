@@ -64,6 +64,7 @@ const getPuzzle = async (day, daily) => {
         // ben: 31
       },
       longestWord: {
+        // Temporarily disabled
         // ben: 'superbo'
       },
       finishingBlow: [

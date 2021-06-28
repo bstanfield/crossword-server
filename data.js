@@ -198,24 +198,24 @@ const createDownAndAcrossWordGroupings = (board) => {
   }
 }
 
-const searchDirectionForLongestWord = (mapping) => {
-  let longestWord = { word: '', positions: [], direction: '' };
-  mapping.map(wordMappingObj => {
-    Object.entries(wordMappingObj).forEach(entry => {
-      const [word, positions] = entry;
-      if (word.length > longestWord.word.length) {
-        longestWord = { word, positions, direction: 'across' }
-      }
-    })
-  })
-  return longestWord;
-}
+// const searchDirectionForLongestWord = (mapping) => {
+//   let longestWord = { word: '', positions: [], direction: '' };
+//   mapping.map(wordMappingObj => {
+//     Object.entries(wordMappingObj).forEach(entry => {
+//       const [word, positions] = entry;
+//       if (word.length > longestWord.word.length) {
+//         longestWord = { word, positions, direction: 'across' }
+//       }
+//     })
+//   })
+//   return longestWord;
+// }
 
-const findLongestWord = (mappings, scores) => {
-  const longestAcross = searchDirectionForLongestWord(mappings.across);
-  const longestDown = searchDirectionForLongestWord(mappings.down);
-  return longestAcross.word.length > longestDown.word.length ? longestAcross : longestDown;
-}
+// const findLongestWord = (mappings, scores) => {
+//   const longestAcross = searchDirectionForLongestWord(mappings.across);
+//   const longestDown = searchDirectionForLongestWord(mappings.down);
+//   return longestAcross.word.length > longestDown.word.length ? longestAcross : longestDown;
+// }
 
 const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => {
   // mappings = mapping of answer strings to positions on board (ie 'JETS' => 1, 2, 3, 4)
@@ -304,33 +304,33 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Longest word
-  if (puzzleIsComplete) {
-    const longestWord = findLongestWord(mappings, scores);
+  // if (puzzleIsComplete) {
+  //   const longestWord = findLongestWord(mappings, scores);
 
-    Object.entries(scores.claimedGuessesLookup).forEach(entry => {
-      const [person, values] = entry;
-      // values = [1,2,3]
-      // person = 'ben'
+  //   Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+  //     const [person, values] = entry;
+  //     // values = [1,2,3]
+  //     // person = 'ben'
 
-      // check each number in positions and if it exists in person's values
-      let successfulMapping = false;
-      for (const position of longestWord.positions) {
-        if (values.includes(position)) {
-          successfulMapping = true;
-        } else {
-          successfulMapping = false;
-          // break;
-          // ^ is this important?
-        }
-      }
+  //     // check each number in positions and if it exists in person's values
+  //     let successfulMapping = false;
+  //     for (const position of longestWord.positions) {
+  //       if (values.includes(position)) {
+  //         successfulMapping = true;
+  //       } else {
+  //         successfulMapping = false;
+  //         // break;
+  //         // ^ is this important?
+  //       }
+  //     }
 
-      if (successfulMapping) {
-        scores.longestWord[person] = longestWord.word;
-      } else {
-        scores.longestWord['2+ people'] = longestWord.word;
-      }
-    })
-  }
+  //     if (successfulMapping) {
+  //       scores.longestWord[person] = longestWord.word;
+  //     } else {
+  //       scores.longestWord['2+ people'] = longestWord.word;
+  //     }
+  //   })
+  // }
 
   // Case: Thief
   if (puzzleIsComplete) {
