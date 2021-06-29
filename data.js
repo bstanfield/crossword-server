@@ -1,16 +1,111 @@
 const glob = require('glob-promise');
-const fs = require("fs").promises;
+const fs = require('fs').promises;
+const fsSync = require('fs');
+const moment = require('moment');
+const fetch = require('node-fetch');
 
+const findNewPuzzle = async (dow, daily, dateRange) => {
+  // Grabs today's crossword.
+  if (daily) {
+    const date = new Date;
+    const today = moment(date);
+    const todayButFormatted = today.format('L');
 
-const findNewPuzzle = async (dow) => {
-  const filePaths = await glob('crosswords/**/*.json');
-  const cwData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))
-  const cwJSON = cwData.map(cw => JSON.parse(cw))
+    const months = [
+      '01',
+      '02',
+      '03',
+      '04',
+      '05',
+      '06',
+      '07',
+      '08',
+      '09',
+      '10',
+      '11',
+      '12'
+    ]
 
-  const fifteenByFifteenCrosswords = cwJSON.filter(cw => cw.size.cols === 15 && cw.size.rows === 15)
+    const year = date.getFullYear();
+    const month = months[date.getMonth()];
+    const day = date.getDate();
 
-  const dowCrosswords = fifteenByFifteenCrosswords.filter(cw => cw.dow === dow)
-  return dowCrosswords[Math.floor(Math.random() * dowCrosswords.length)];
+    console.log('Checking for: ', './crosswords/' + year + '/' + month + '/' + day + '.json')
+
+    // Check if today's crossword is downloaded already.
+    if (fsSync.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
+      console.log('File exists already.')
+    } else {
+      console.log('File does not exist!', './crosswords/' + year + '/' + month + '/' + day + '.json')
+
+      // File doesn't exist. Download it!
+      let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + todayButFormatted;
+
+      let options = {
+        method: 'GET',
+        headers: {
+          Connection: 'keep-alive',
+          'sec-ch-ua': '" Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"',
+          'sec-ch-ua-mobile': '?0',
+          Accept: '*/*',
+          'Sec-Fetch-Site': 'cross-site',
+          'Sec-Fetch-Mode': 'no-cors',
+          'Sec-Fetch-Dest': 'empty',
+          Referer: 'http://localhost:7000/',
+          'Accept-Language': 'en-US,en;q=0.9',
+          cookie: 'ASP.NET_SessionId=rma4cngoytmp2gcyf5a2gs3l; ARRAffinity=b84cfd8a83b6d9093e8bb66a11c64ff85f40266f8f5aeef3fc332cffffb9d643; WAWebSiteSID=cef7c92e37d141f0b5bb8ef1e074db95; '
+        }
+      };
+
+      const response = await fetch(url, options);
+
+      console.log('new puzzle fetched...');
+      const json = await response.json();
+      await fs.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json))
+      console.log('New file added!');
+    }
+
+    const cwData = await fs.readFile('./crosswords/' + year + '/' + month + '/' + day + '.json', 'utf8');
+    const cwJSON = JSON.parse(cwData);
+
+    return cwJSON;
+  } else {
+    // TODO: ADD FILTER FOR SUNDAY DAILIES
+    // Grabs a random crossword from the Vault.
+    const filePaths = await glob('crosswords/**/*.json');
+    const cwData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))
+    const cwJSON = cwData.map(cw => JSON.parse(cw))
+
+    const filterCrosswordsByDate = (crosswords, minDate) => crosswords.filter(cw => {
+      const cwDate = new Date(cw.date);
+      const minimumDate = new Date(minDate);
+
+      if (cwDate > minimumDate) return true;
+      return false;
+    })
+
+    let fifteenByFifteenCrosswords = cwJSON.filter(cw => cw.size.cols === 15 && cw.size.rows === 15)
+    if (dateRange) {
+      if (dateRange === '2021') {
+        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2021');
+      }
+
+      if (dateRange === '2015+') {
+        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2015');
+      }
+
+      if (dateRange === '2010+') {
+        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2010');
+      }
+
+      if (dateRange === '2005+') {
+        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2005');
+      }
+    }
+
+    const dowCrosswords = fifteenByFifteenCrosswords.filter(cw => cw.dow === dow)
+    return dowCrosswords[Math.floor(Math.random() * dowCrosswords.length)];
+  }
 };
 
 const createDownAndAcrossWordGroupings = (board) => {
@@ -78,24 +173,24 @@ const createDownAndAcrossWordGroupings = (board) => {
   }
 }
 
-const searchDirectionForLongestWord = (mapping) => {
-  let longestWord = { word: '', positions: [], direction: '' };
-  mapping.map(wordMappingObj => {
-    Object.entries(wordMappingObj).forEach(entry => {
-      const [word, positions] = entry;
-      if (word.length > longestWord.word.length) {
-        longestWord = { word, positions, direction: 'across' }
-      }
-    })
-  })
-  return longestWord;
-}
+// const searchDirectionForLongestWord = (mapping) => {
+//   let longestWord = { word: '', positions: [], direction: '' };
+//   mapping.map(wordMappingObj => {
+//     Object.entries(wordMappingObj).forEach(entry => {
+//       const [word, positions] = entry;
+//       if (word.length > longestWord.word.length) {
+//         longestWord = { word, positions, direction: 'across' }
+//       }
+//     })
+//   })
+//   return longestWord;
+// }
 
-const findLongestWord = (mappings, scores) => {
-  const longestAcross = searchDirectionForLongestWord(mappings.across);
-  const longestDown = searchDirectionForLongestWord(mappings.down);
-  return longestAcross.word.length > longestDown.word.length ? longestAcross : longestDown;
-}
+// const findLongestWord = (mappings, scores) => {
+//   const longestAcross = searchDirectionForLongestWord(mappings.across);
+//   const longestDown = searchDirectionForLongestWord(mappings.down);
+//   return longestAcross.word.length > longestDown.word.length ? longestAcross : longestDown;
+// }
 
 const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => {
   // mappings = mapping of answer strings to positions on board (ie 'JETS' => 1, 2, 3, 4)
@@ -184,33 +279,33 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Longest word
-  if (puzzleIsComplete) {
-    const longestWord = findLongestWord(mappings, scores);
+  // if (puzzleIsComplete) {
+  //   const longestWord = findLongestWord(mappings, scores);
 
-    Object.entries(scores.claimedGuessesLookup).forEach(entry => {
-      const [person, values] = entry;
-      // values = [1,2,3]
-      // person = 'ben'
+  //   Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+  //     const [person, values] = entry;
+  //     // values = [1,2,3]
+  //     // person = 'ben'
 
-      // check each number in positions and if it exists in person's values
-      let successfulMapping = false;
-      for (const position of longestWord.positions) {
-        if (values.includes(position)) {
-          successfulMapping = true;
-        } else {
-          successfulMapping = false;
-          // break;
-          // ^ is this important?
-        }
-      }
+  //     // check each number in positions and if it exists in person's values
+  //     let successfulMapping = false;
+  //     for (const position of longestWord.positions) {
+  //       if (values.includes(position)) {
+  //         successfulMapping = true;
+  //       } else {
+  //         successfulMapping = false;
+  //         // break;
+  //         // ^ is this important?
+  //       }
+  //     }
 
-      if (successfulMapping) {
-        scores.longestWord[person] = longestWord.word;
-      } else {
-        scores.longestWord['2+ people'] = longestWord.word;
-      }
-    })
-  }
+  //     if (successfulMapping) {
+  //       scores.longestWord[person] = longestWord.word;
+  //     } else {
+  //       scores.longestWord['2+ people'] = longestWord.word;
+  //     }
+  //   })
+  // }
 
   // Case: Thief
   if (puzzleIsComplete) {
