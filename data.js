@@ -1,10 +1,9 @@
 const glob = require('glob-promise');
-const fs = require("fs").promises;
+const fs = require('fs').promises;
 const fsSync = require('fs');
 const moment = require('moment');
 const fetch = require('node-fetch');
 
-// HARD CODED FOR TESTING
 const findNewPuzzle = async (dow, daily, dateRange) => {
   // Grabs today's crossword.
   if (daily) {
@@ -31,11 +30,14 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
     const month = months[date.getMonth()];
     const day = date.getDate();
 
+    console.log('Checking for: ', './crosswords/' + year + '/' + month + '/' + day + '.json')
+
     // Check if today's crossword is downloaded already.
     if (fsSync.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
       console.log('File exists already.')
     } else {
       console.log('File does not exist!', './crosswords/' + year + '/' + month + '/' + day + '.json')
+
       // File doesn't exist. Download it!
       let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + todayButFormatted;
 
@@ -55,65 +57,17 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
         }
       };
 
-      fetch(url, options)
-        .then(res => res.json())
-        .then(json => {
-          console.log('Adding file to directory!');
+      const response = await fetch(url, options);
 
-          const findOrCreateDirectory = (year, month, day) => {
-            fsSync.access('./crosswords/' + year + '/' + month, function (error) {
-              if (error) {
-                console.log('Directory does not exist.')
-                console.log('Creating directory...');
-                fsSync.mkdirSync(process.cwd() + '/crosswords/' + year + '/' + month, { recursive: true }, (error) => {
-                  if (error) {
-                    console.error('An error occur: ', error);
-                  } else {
-                    console.log('Directory created');
-                  }
-                })
-
-                console.log('Adding JSON file...')
-                if (fsSync.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
-                  console.log('File exists already.')
-                } else {
-                  fsSync.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json), (error) => {
-                    if (error) {
-                      console.error('An error occur: ', error);
-                    } else {
-                      console.log('File added!', year, month, day);
-                    }
-                  })
-                }
-
-              } else {
-                console.log("Directory exists.")
-                console.log('Adding JSON file...')
-                if (fsSync.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
-                  console.log('File exists already.')
-                } else {
-                  fsSync.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json), (error) => {
-                    if (error) {
-                      console.error('An error occur: ', error);
-                    } else {
-                      console.log('File added!', year, month, day);
-                    }
-                  })
-                }
-              }
-            })
-          }
-
-          findOrCreateDirectory(year, months[month], day)
-
-        })
-        .catch(err => console.error('error:' + err));
+      console.log('new puzzle fetched...');
+      const json = await response.json();
+      await fs.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json))
+      console.log('New file added!');
     }
 
     const cwData = await fs.readFile('./crosswords/' + year + '/' + month + '/' + day + '.json', 'utf8');
     const cwJSON = JSON.parse(cwData);
 
-    // TODO: MAKE SURE NOT SUNDAY
     return cwJSON;
   } else {
     // TODO: ADD FILTER FOR SUNDAY DAILIES
