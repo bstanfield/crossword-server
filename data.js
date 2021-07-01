@@ -27,10 +27,8 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
     ]
 
     const year = date.getFullYear();
-    const month = '06';
-    const day = '30';
-    // const month = months[date.getMonth()];
-    // const day = date.getDate();
+    const month = months[date.getMonth()];
+    const day = date.getDate();
 
     console.log('Checking for: ', './crosswords/' + year + '/' + month + '/' + day + '.json')
 
@@ -41,8 +39,7 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
       console.log('File does not exist!', './crosswords/' + year + '/' + month + '/' + day + '.json')
 
       // File doesn't exist. Download it!
-      let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + '06/30/2021';
-      // let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + todayButFormatted;
+      let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + todayButFormatted;
 
       let options = {
         method: 'GET',
@@ -64,9 +61,16 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
 
       console.log('new puzzle fetched...');
       const json = await response.json();
-      console.log('json: ', json);
+
+      try {
+        console.log('checking for month/year parent dirs...');
+        await fs.access('./crosswords/' + year + '/' + month);
+      } catch (e) {
+        console.log('creating parent dir(s)...');
+        await fs.mkdir('./crosswords/' + year + '/' + month, { recursive: true });
+      }
+
       await fs.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json))
-      console.log('New file added!');
     }
 
     const cwData = await fs.readFile('./crosswords/' + year + '/' + month + '/' + day + '.json', 'utf8');
