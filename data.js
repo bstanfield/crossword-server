@@ -27,8 +27,10 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
     ]
 
     const year = date.getFullYear();
-    const month = months[date.getMonth()];
-    const day = date.getDate();
+    const month = '06';
+    const day = '30';
+    // const month = months[date.getMonth()];
+    // const day = date.getDate();
 
     console.log('Checking for: ', './crosswords/' + year + '/' + month + '/' + day + '.json')
 
@@ -39,7 +41,8 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
       console.log('File does not exist!', './crosswords/' + year + '/' + month + '/' + day + '.json')
 
       // File doesn't exist. Download it!
-      let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + todayButFormatted;
+      let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + '06/30/2021';
+      // let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + todayButFormatted;
 
       let options = {
         method: 'GET',
