@@ -61,6 +61,7 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
 
       console.log('new puzzle fetched...');
       const json = await response.json();
+      console.log('json: ', json);
       await fs.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json))
       console.log('New file added!');
     }
