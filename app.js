@@ -37,6 +37,10 @@ const instantiateGuesses = (grid) => grid.map(item => {
 const getPuzzle = async (day, daily, dateRange) => {
   const board = await findNewPuzzle(day || 'Monday', daily, dateRange);
   const { grid } = board
+  if (grid === null) {
+    console.log('Error getting puzzle!');
+    return false;
+  }
   const guesses = instantiateGuesses(grid)
   const { across, down } = createDownAndAcrossWordGroupings(board);
 

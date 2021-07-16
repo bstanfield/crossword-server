@@ -61,6 +61,11 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
 
       console.log('new puzzle fetched...');
       const json = await response.json();
+      console.log('check for null: ', json.author);
+
+      if (!json.author) {
+        console.log('Crossword does not exist! Try with older date?');
+      }
 
       try {
         console.log('checking for month/year parent dirs...');
