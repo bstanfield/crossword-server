@@ -28,7 +28,8 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
 
     const year = date.getFullYear();
     const month = months[date.getMonth()];
-    const day = date.getDate();
+    // Ensure today's date matches NY time (when NYT releases new crossword)
+    const day = date.getDate() - 1;
 
     console.log('Checking for: ', './crosswords/' + year + '/' + month + '/' + day + '.json')
 
