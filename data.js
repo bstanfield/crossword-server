@@ -28,8 +28,7 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
 
     const year = date.getFullYear();
     const month = months[date.getMonth()];
-    // Ensure today's date matches NY time (when NYT releases new crossword)
-    const day = date.getDate() - 1;
+    const day = date.getDate();
 
     console.log('Checking for: ', './crosswords/' + year + '/' + month + '/' + day + '.json')
 
@@ -40,7 +39,7 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
       console.log('File does not exist!', './crosswords/' + year + '/' + month + '/' + day + '.json')
 
       // File doesn't exist. Download it!
-      let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + todayButFormatted;
+      let url = 'https://www.xwordinfo.com/JSON/Data.ashx?format=text&date=' + todayButFormatted;
 
       let options = {
         method: 'GET',
@@ -58,8 +57,8 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
         }
       };
 
+      console.log('url: ', url);
       const response = await fetch(url, options);
-      console.log('response: ', response);
 
       console.log('new puzzle fetched...');
       const json = await response.json();
