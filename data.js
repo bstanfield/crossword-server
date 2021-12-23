@@ -59,6 +59,7 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
       };
 
       const response = await fetch(url, options);
+      console.log('response: ', response);
 
       console.log('new puzzle fetched...');
       const json = await response.json();
