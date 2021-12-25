@@ -98,26 +98,26 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
       return false;
     })
 
-    let fifteenByFifteenCrosswords = cwJSON.filter(cw => cw.size.cols === 15 && cw.size.rows === 15)
+    let relevantCrosswords = cwJSON;
     if (dateRange) {
       if (dateRange === '2021') {
-        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2021');
+        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, '2021');
       }
 
       if (dateRange === '2015+') {
-        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2015');
+        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, '2015');
       }
 
       if (dateRange === '2010+') {
-        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2010');
+        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, '2010');
       }
 
       if (dateRange === '2005+') {
-        fifteenByFifteenCrosswords = filterCrosswordsByDate(fifteenByFifteenCrosswords, '2005');
+        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, '2005');
       }
     }
 
-    const dowCrosswords = fifteenByFifteenCrosswords.filter(cw => cw.dow === dow)
+    const dowCrosswords = relevantCrosswords.filter(cw => cw.dow === dow)
     return dowCrosswords[Math.floor(Math.random() * dowCrosswords.length)];
   }
 };
