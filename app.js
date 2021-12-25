@@ -94,7 +94,7 @@ const getPuzzle = async (day, daily, dateRange) => {
 }
 
 // Move to Heroku env
-const randomColors = ["green", "purple", "blue"];
+const randomColors = ["green", "purple", "blue", "orange"];
 
 let clientsHighlights = {};
 let connectedClients = {};
@@ -190,7 +190,7 @@ const startSocketServer = async () => {
     assignedColors++;
 
     // hardcoded to number of randomColors
-    if (assignedColors > 2) {
+    if (assignedColors >= randomColors.length) {
       assignedColors = 0;
     }
 
