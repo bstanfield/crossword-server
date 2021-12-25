@@ -94,7 +94,7 @@ const getPuzzle = async (day, daily, dateRange) => {
 }
 
 // Move to Heroku env
-const randomColors = ["red", "purple", "blue"];
+const randomColors = ["green", "purple", "blue"];
 
 let clientsHighlights = {};
 let connectedClients = {};
