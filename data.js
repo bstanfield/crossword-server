@@ -1,129 +1,154 @@
-const glob = require('glob-promise');
-const fs = require('fs').promises;
-const fsSync = require('fs');
-const moment = require('moment');
-const fetch = require('node-fetch');
+const glob = require("glob-promise");
+const fs = require("fs").promises;
+const fsSync = require("fs");
+const moment = require("moment");
+const fetch = require("node-fetch");
 
 const findNewPuzzle = async (dow, daily, dateRange) => {
   // Grabs today's crossword.
   if (daily) {
-    const date = new Date;
+    const date = new Date();
     const today = moment(date);
-    const todayButFormatted = today.format('L');
+    const todayButFormatted = today.format("L");
 
     const months = [
-      '01',
-      '02',
-      '03',
-      '04',
-      '05',
-      '06',
-      '07',
-      '08',
-      '09',
-      '10',
-      '11',
-      '12'
-    ]
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10",
+      "11",
+      "12",
+    ];
 
     const year = date.getFullYear();
     const month = months[date.getMonth()];
     const day = date.getDate();
 
-    console.log('Checking for: ', './crosswords/' + year + '/' + month + '/' + day + '.json')
+    console.log(
+      "Checking for: ",
+      "./crosswords/" + year + "/" + month + "/" + day + ".json"
+    );
 
     // Check if today's crossword is downloaded already.
-    if (fsSync.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
-      console.log('File exists already.')
+    if (
+      fsSync.existsSync(
+        "./crosswords/" + year + "/" + month + "/" + day + ".json"
+      )
+    ) {
+      console.log("File exists already.");
     } else {
-      console.log('File does not exist!', './crosswords/' + year + '/' + month + '/' + day + '.json')
+      console.log(
+        "File does not exist!",
+        "./crosswords/" + year + "/" + month + "/" + day + ".json"
+      );
 
       // File doesn't exist. Download it!
-      let url = 'https://www.xwordinfo.com/JSON/Data.ashx?format=text&date=' + todayButFormatted;
+      let url =
+        "https://www.xwordinfo.com/JSON/Data.ashx?format=text&date=" +
+        todayButFormatted;
 
       let options = {
-        method: 'GET',
+        method: "GET",
         headers: {
-          Connection: 'keep-alive',
-          'sec-ch-ua': '" Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"',
-          'sec-ch-ua-mobile': '?0',
-          Accept: '*/*',
-          'Sec-Fetch-Site': 'cross-site',
-          'Sec-Fetch-Mode': 'no-cors',
-          'Sec-Fetch-Dest': 'empty',
-          Referer: 'http://localhost:7000/',
-          'Accept-Language': 'en-US,en;q=0.9',
-          cookie: 'ASP.NET_SessionId=rma4cngoytmp2gcyf5a2gs3l; ARRAffinity=b84cfd8a83b6d9093e8bb66a11c64ff85f40266f8f5aeef3fc332cffffb9d643; WAWebSiteSID=cef7c92e37d141f0b5bb8ef1e074db95; '
-        }
+          Connection: "keep-alive",
+          "sec-ch-ua":
+            '" Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"',
+          "sec-ch-ua-mobile": "?0",
+          Accept: "*/*",
+          "Sec-Fetch-Site": "cross-site",
+          "Sec-Fetch-Mode": "no-cors",
+          "Sec-Fetch-Dest": "empty",
+          Referer: "http://localhost:7000/",
+          "Accept-Language": "en-US,en;q=0.9",
+          cookie:
+            "ASP.NET_SessionId=rma4cngoytmp2gcyf5a2gs3l; ARRAffinity=b84cfd8a83b6d9093e8bb66a11c64ff85f40266f8f5aeef3fc332cffffb9d643; WAWebSiteSID=cef7c92e37d141f0b5bb8ef1e074db95; ",
+        },
       };
 
-      console.log('url: ', url);
+      console.log("url: ", url);
       const response = await fetch(url, options);
 
-      console.log('new puzzle fetched...');
+      console.log("new puzzle fetched...");
       const json = await response.json();
-      console.log('check for null: ', json.author);
+      console.log("check for null: ", json.author);
 
       if (!json.author) {
-        console.log('Crossword does not exist! Try with older date?');
+        console.log("Crossword does not exist! Try with older date?");
       }
 
       try {
-        console.log('checking for month/year parent dirs...');
-        await fs.access('./crosswords/' + year + '/' + month);
+        console.log("checking for month/year parent dirs...");
+        await fs.access("./crosswords/" + year + "/" + month);
       } catch (e) {
-        console.log('creating parent dir(s)...');
-        await fs.mkdir('./crosswords/' + year + '/' + month, { recursive: true });
+        console.log("creating parent dir(s)...");
+        await fs.mkdir("./crosswords/" + year + "/" + month, {
+          recursive: true,
+        });
       }
 
-      await fs.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json))
+      await fs.writeFile(
+        "./crosswords/" + year + "/" + month + "/" + day + ".json",
+        JSON.stringify(json)
+      );
     }
 
-    const cwData = await fs.readFile('./crosswords/' + year + '/' + month + '/' + day + '.json', 'utf8');
+    const cwData = await fs.readFile(
+      "./crosswords/" + year + "/" + month + "/" + day + ".json",
+      "utf8"
+    );
     const cwJSON = JSON.parse(cwData);
 
     return cwJSON;
   } else {
     // TODO: ADD FILTER FOR SUNDAY DAILIES
     // Grabs a random crossword from the Vault.
-    const filePaths = await glob('crosswords/**/*.json');
-    const cwData = await Promise.all(filePaths.map(fp => fs.readFile(fp, 'utf8')))
-    const cwJSON = cwData.map(cw => JSON.parse(cw))
+    const filePaths = await glob("crosswords/**/*.json");
+    const cwData = await Promise.all(
+      filePaths.map((fp) => fs.readFile(fp, "utf8"))
+    );
+    const cwJSON = cwData.map((cw) => JSON.parse(cw));
 
-    const filterCrosswordsByDate = (crosswords, minDate) => crosswords.filter(cw => {
-      const cwDate = new Date(cw.date);
-      const minimumDate = new Date(minDate);
+    const filterCrosswordsByDate = (crosswords, minDate) =>
+      crosswords.filter((cw) => {
+        const cwDate = new Date(cw.date);
+        const minimumDate = new Date(minDate);
 
-      if (cwDate > minimumDate) return true;
-      return false;
-    })
+        if (cwDate > minimumDate) return true;
+        return false;
+      });
 
     let relevantCrosswords = cwJSON;
     if (dateRange) {
-      if (dateRange === '2021') {
-        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, '2021');
+      if (dateRange === "2021") {
+        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, "2021");
       }
 
-      if (dateRange === '2015+') {
-        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, '2015');
+      if (dateRange === "2015+") {
+        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, "2015");
       }
 
-      if (dateRange === '2010+') {
-        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, '2010');
+      if (dateRange === "2010+") {
+        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, "2010");
       }
 
-      if (dateRange === '2005+') {
-        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, '2005');
+      if (dateRange === "2005+") {
+        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, "2005");
       }
     }
 
-    const dowCrosswords = relevantCrosswords.filter(cw => cw.dow === dow)
+    const dowCrosswords = relevantCrosswords.filter((cw) => cw.dow === dow);
     return dowCrosswords[Math.floor(Math.random() * dowCrosswords.length)];
   }
 };
 
 const createDownAndAcrossWordGroupings = (board) => {
-  let word = ''
+  let word = "";
   let wordPositions = [];
 
   let acrossWordMappings = [];
@@ -131,39 +156,39 @@ const createDownAndAcrossWordGroupings = (board) => {
   board.grid.map((letter, index) => {
     acrossRowPosition++;
 
-    if (letter === '.') {
-      if (word !== '') acrossWordMappings.push({ [word]: wordPositions })
-      word = ''
-      wordPositions = []
+    if (letter === ".") {
+      if (word !== "") acrossWordMappings.push({ [word]: wordPositions });
+      word = "";
+      wordPositions = [];
     } else {
-      word = word + letter
+      word = word + letter;
       wordPositions.push(index + 1);
     }
 
     if (acrossRowPosition === 15) {
-      if (word !== '') acrossWordMappings.push({ [word]: wordPositions });
+      if (word !== "") acrossWordMappings.push({ [word]: wordPositions });
       acrossRowPosition = 0;
-      word = '';
+      word = "";
       wordPositions = [];
     }
-  })
+  });
 
-  let position = 1
-  let grouping = []
-  while (position <= 225) {
-    if (board.grid[position - 1] !== '.') {
-      let match = false
+  let position = 1;
+  let grouping = [];
+  while (position <= board.size.cols * board.size.rows) {
+    if (board.grid[position - 1] !== ".") {
+      let match = false;
       if (grouping.length === 0) {
-        grouping.push([position])
+        grouping.push([position]);
       } else {
         grouping.map((group, index) => {
           if (group.includes(position - 15)) {
-            match = true
-            grouping[index].push(position)
+            match = true;
+            grouping[index].push(position);
           }
-        })
+        });
         if (!match) {
-          grouping.push([position])
+          grouping.push([position]);
         }
       }
     }
@@ -171,21 +196,21 @@ const createDownAndAcrossWordGroupings = (board) => {
   }
 
   // TODO: Use this code to add to ijnitial obj instead of using frontend
-  const downWordMappings = grouping.map(group => {
-    let word = '';
+  const downWordMappings = grouping.map((group) => {
+    let word = "";
     let positions = [];
-    group.map(position => {
+    group.map((position) => {
       word = word + board.grid[position - 1];
       positions.push(position);
     });
     return { [word]: positions };
-  })
+  });
 
   return {
     down: downWordMappings,
     across: acrossWordMappings,
-  }
-}
+  };
+};
 
 // const searchDirectionForLongestWord = (mapping) => {
 //   let longestWord = { word: '', positions: [], direction: '' };
@@ -206,12 +231,18 @@ const createDownAndAcrossWordGroupings = (board) => {
 //   return longestAcross.word.length > longestDown.word.length ? longestAcross : longestDown;
 // }
 
-const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => {
+const checkIfLetterAddsToScore = (
+  puzzle,
+  player,
+  position,
+  letter,
+  correct
+) => {
   // mappings = mapping of answer strings to positions on board (ie 'JETS' => 1, 2, 3, 4)
   const { scores, mappings, guesses } = puzzle;
   letter = letter.toLowerCase();
   const claimed = scores.claimedGuesses.includes(position);
-  const puzzleIsComplete = !guesses.includes('');
+  const puzzleIsComplete = !guesses.includes("");
 
   // Claimed Guesses
   if (correct && !claimed) {
@@ -239,7 +270,7 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   }
 
   // Case: toughLetters
-  if (correct && ['x', 'y', 'z'].includes(letter) && !claimed) {
+  if (correct && ["x", "y", "z"].includes(letter) && !claimed) {
     if (scores.toughLetters[player]) {
       scores.toughLetters[player]++;
     } else {
@@ -258,11 +289,13 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
 
   // Case: Editor (TODO: rename to "Medic")
   if (correct && !claimed) {
-    Object.entries(scores.incorrectGuesses).forEach(entry => {
+    Object.entries(scores.incorrectGuesses).forEach((entry) => {
       const incorrectGuessesPlayer = Object.values(entry)[0];
       // Only look at other people's wrong guesses
       if (incorrectGuessesPlayer !== player) {
-        if (scores.incorrectGuesses[incorrectGuessesPlayer].includes(position)) {
+        if (
+          scores.incorrectGuesses[incorrectGuessesPlayer].includes(position)
+        ) {
           // This means someone correctly fixed a previously incorrect guess!
           if (scores.editor[player]) {
             scores.editor[player]++;
@@ -271,14 +304,15 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
           }
         }
       }
-    })
+    });
   }
 
   // Case: hotStreak
   if (correct && !claimed) {
     if (scores.hotStreak[player]) {
       const lastItem = scores.hotStreak[player].length - 1;
-      scores.hotStreak[player][lastItem] = scores.hotStreak[player][lastItem] + 1;
+      scores.hotStreak[player][lastItem] =
+        scores.hotStreak[player][lastItem] + 1;
     } else {
       scores.hotStreak[player] = [1];
     }
@@ -326,42 +360,42 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
     // Let's start with across
     const thiefScores = {};
 
-    Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+    Object.entries(scores.claimedGuessesLookup).forEach((entry) => {
       const [person, values] = entry;
       let thiefScore = 0;
 
       const wordMappings = [...mappings.across, ...mappings.down];
 
       // Map over each word...
-      wordMappings.map(mapping => {
+      wordMappings.map((mapping) => {
         // positions = ie [0, 1, 2, 3]
         let lettersAnsweredInWord = 0;
         const positions = Object.values(mapping)[0];
 
         // Map over each letter in word...
-        positions.map(position => {
+        positions.map((position) => {
           if (values.includes(position)) {
             lettersAnsweredInWord++;
           }
-        })
+        });
 
         if (lettersAnsweredInWord === 1) {
           thiefScore++;
         }
-      })
+      });
 
       thiefScores[person] = thiefScore;
-    })
+    });
     scores.thief = thiefScores;
   }
 
   // Case: Benchwarmer
   if (puzzleIsComplete) {
     let benchwarmerScores = {};
-    Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+    Object.entries(scores.claimedGuessesLookup).forEach((entry) => {
       const [person, values] = entry;
       benchwarmerScores[person] = values.length;
-    })
+    });
 
     scores.benchwarmer = benchwarmerScores;
   }
@@ -369,25 +403,24 @@ const checkIfLetterAddsToScore = (puzzle, player, position, letter, correct) => 
   // Case: Workhorse
   if (puzzleIsComplete) {
     let workhorseScores = {};
-    Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+    Object.entries(scores.claimedGuessesLookup).forEach((entry) => {
       const [person, values] = entry;
       workhorseScores[person] = values.length;
-    })
+    });
     scores.workhorse = workhorseScores;
   }
 
   // Check if puzzle is complete AND the last answer was correct
-  // TODO: This actually might not provide the 100% correct completed_at time -- puzzle should 
+  // TODO: This actually might not provide the 100% correct completed_at time -- puzzle should
   // only be complete if THERE ARE NO INCORRECTS
   if (correct && puzzleIsComplete) {
     const completed_at = new Date();
     return completed_at;
   }
-
-}
+};
 
 module.exports = {
   findNewPuzzle,
   createDownAndAcrossWordGroupings,
   checkIfLetterAddsToScore,
-}
+};
