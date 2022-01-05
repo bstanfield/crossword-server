@@ -125,6 +125,9 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
 
     let relevantCrosswords = cwJSON;
     if (dateRange) {
+      if (dateRange === "2022") {
+        relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, "2022");
+      }
       if (dateRange === "2021") {
         relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, "2021");
       }
