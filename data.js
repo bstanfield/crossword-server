@@ -249,7 +249,8 @@ const checkIfLetterAddsToScore = (
 
   // Count incorrects
   // TODO: Undo
-  if (puzzleIsComplete) {
+  if (true) {
+    // if (puzzleIsComplete) {
     console.log("counting incorrects");
     let incorrects = [];
     board.grid.map((letter, index) => {
