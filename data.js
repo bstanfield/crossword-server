@@ -248,22 +248,24 @@ const checkIfLetterAddsToScore = (
   const puzzleIsComplete = !guesses.includes("");
 
   // Count incorrects
+  // TODO: Undo
   if (puzzleIsComplete) {
     console.log("counting incorrects");
     let incorrects = [];
     board.grid.map((letter, index) => {
-      console.log("letter: ", letter);
-      console.log("guess: ", guesses[index]);
       if (letter === "." || guesses[index] === ".") {
         return;
       }
 
+      // TODO: Should this actually not compare to guesses[index] but the cold hard truth?
       if (letter.toLowerCase() !== guesses[index].toLowerCase()) {
+        console.log(letter, "is not", guesses[index]);
         incorrects.push(index + 1);
       }
 
       // TODO: Compare each spot in grid with user guesses. Send back incomplete grid positions
     });
+    console.log("incorrects: ", incorrects);
     scores.incorrects = incorrects;
 
     // Claimed Guesses
@@ -365,7 +367,7 @@ const checkIfLetterAddsToScore = (
     //       } else {
     //         successfulMapping = false;
     //         // break;
-    //         // ^ is this important?
+    //         // ^ is this mportant?
     //       }
     //     }
 

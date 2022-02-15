@@ -168,6 +168,7 @@ const startSocketServer = async () => {
       // TODO: Combine
       socket.emit("board", puzzles[room].board);
       socket.emit("guesses", puzzles[room].guesses);
+      // console.log("sending scores: ", puzzles[room].scores);
       socket.emit("scores", puzzles[room].scores);
 
       socket.emit("id", socket.id);
@@ -233,6 +234,8 @@ const startSocketServer = async () => {
           ? puzzles[room].board.grid[position - 1]
           : "?";
 
+        puzzles[room].guesses[position - 1] = letter;
+
         // Check if input is actually a letter, and then if correct/incorrect
         // Checks if guess tile has already been correctly guessed by someone
         if (letter !== "") {
@@ -260,10 +263,10 @@ const startSocketServer = async () => {
               false
             );
           }
+          // console.log("emitting scores ", puzzles[room].scores);
           io.to(room).emit("scores", puzzles[room].scores);
         }
 
-        puzzles[room].guesses[position - 1] = letter;
         socket.to(room).emit("inputChange", { position: position - 1, letter });
         io.in(room).emit("guesses", puzzles[room].guesses);
 
