@@ -242,183 +242,211 @@ const checkIfLetterAddsToScore = (
   correct
 ) => {
   // mappings = mapping of answer strings to positions on board (ie 'JETS' => 1, 2, 3, 4)
-  const { scores, mappings, guesses } = puzzle;
+  const { scores, mappings, guesses, board } = puzzle;
   letter = letter.toLowerCase();
   const claimed = scores.claimedGuesses.includes(position);
   const puzzleIsComplete = !guesses.includes("");
 
-  // Claimed Guesses
-  if (correct && !claimed) {
-    scores.claimedGuesses.push(position);
-    if (scores.claimedGuessesLookup[player]) {
-      scores.claimedGuessesLookup[player].push(position);
-    } else {
-      scores.claimedGuessesLookup[player] = [position];
-    }
-  }
+  // Count incorrects
+  // TODO: Undo
+  if (true) {
+    // if (puzzleIsComplete) {
+    let incorrects = [];
+    board.grid.map((letter, index) => {
+      if (letter === "." || guesses[index] === ".") {
+        return;
+      }
 
-  // Case: highestAccuracy
-  if (correct && !claimed) {
-    if (scores.highestAccuracy[player]) {
-      scores.highestAccuracy[player].correct++;
-    } else {
-      scores.highestAccuracy[player] = { correct: 1, incorrect: 0 };
-    }
-  } else {
-    if (scores.highestAccuracy[player]) {
-      scores.highestAccuracy[player].incorrect++;
-    } else {
-      scores.highestAccuracy[player] = { correct: 0, incorrect: 1 };
-    }
-  }
+      // TODO: Should this actually not compare to guesses[index] but the cold hard truth?
+      if (letter.toLowerCase() !== guesses[index].toLowerCase()) {
+        console.log(letter, "is not", guesses[index]);
+        incorrects.push(index + 1);
+      }
 
-  // Case: toughLetters
-  if (correct && ["x", "y", "z"].includes(letter) && !claimed) {
-    if (scores.toughLetters[player]) {
-      scores.toughLetters[player]++;
-    } else {
-      scores.toughLetters[player] = 1;
-    }
-  }
+      // TODO: Compare each spot in grid with user guesses. Send back incomplete grid positions
+    });
+    scores.incorrects = incorrects;
 
-  // Tally incorrect guesses
-  if (!correct) {
-    if (scores.incorrectGuesses[player]) {
-      scores.incorrectGuesses[player].push(position);
-    } else {
-      scores.incorrectGuesses[player] = [position];
+    // Claimed Guesses
+    if (correct && !claimed) {
+      scores.claimedGuesses.push(position);
+      if (scores.claimedGuessesLookup[player]) {
+        scores.claimedGuessesLookup[player].push(position);
+      } else {
+        scores.claimedGuessesLookup[player] = [position];
+      }
     }
-  }
 
-  // Case: Editor (TODO: rename to "Medic")
-  if (correct && !claimed) {
-    Object.entries(scores.incorrectGuesses).forEach((entry) => {
-      const incorrectGuessesPlayer = Object.values(entry)[0];
-      // Only look at other people's wrong guesses
-      if (incorrectGuessesPlayer !== player) {
-        if (
-          scores.incorrectGuesses[incorrectGuessesPlayer].includes(position)
-        ) {
-          // This means someone correctly fixed a previously incorrect guess!
-          if (scores.editor[player]) {
-            scores.editor[player]++;
-          } else {
-            scores.editor[player] = 1;
+    // Case: highestAccuracy
+    if (correct && !claimed) {
+      if (scores.highestAccuracy[player]) {
+        scores.highestAccuracy[player].correct++;
+      } else {
+        scores.highestAccuracy[player] = { correct: 1, incorrect: 0 };
+      }
+    } else {
+      if (scores.highestAccuracy[player]) {
+        scores.highestAccuracy[player].incorrect++;
+      } else {
+        scores.highestAccuracy[player] = { correct: 0, incorrect: 1 };
+      }
+    }
+
+    // Case: toughLetters
+    if (correct && ["x", "y", "z"].includes(letter) && !claimed) {
+      if (scores.toughLetters[player]) {
+        scores.toughLetters[player]++;
+      } else {
+        scores.toughLetters[player] = 1;
+      }
+    }
+
+    // Tally incorrect guesses
+    if (!correct) {
+      if (scores.incorrectGuesses[player]) {
+        scores.incorrectGuesses[player].push(position);
+      } else {
+        scores.incorrectGuesses[player] = [position];
+      }
+    }
+
+    // Case: Editor (TODO: rename to "Medic")
+    if (correct && !claimed) {
+      Object.entries(scores.incorrectGuesses).forEach((entry) => {
+        const incorrectGuessesPlayer = Object.values(entry)[0];
+        // Only look at other people's wrong guesses
+        if (incorrectGuessesPlayer !== player) {
+          if (
+            scores.incorrectGuesses[incorrectGuessesPlayer].includes(position)
+          ) {
+            // This means someone correctly fixed a previously incorrect guess!
+            if (scores.editor[player]) {
+              scores.editor[player]++;
+            } else {
+              scores.editor[player] = 1;
+            }
           }
         }
+      });
+    }
+
+    // Case: hotStreak
+    if (correct && !claimed) {
+      if (scores.hotStreak[player]) {
+        const lastItem = scores.hotStreak[player].length - 1;
+        scores.hotStreak[player][lastItem] =
+          scores.hotStreak[player][lastItem] + 1;
+      } else {
+        scores.hotStreak[player] = [1];
       }
-    });
-  }
-
-  // Case: hotStreak
-  if (correct && !claimed) {
-    if (scores.hotStreak[player]) {
+    }
+    if (!correct && scores.hotStreak[player] && !claimed) {
       const lastItem = scores.hotStreak[player].length - 1;
-      scores.hotStreak[player][lastItem] =
-        scores.hotStreak[player][lastItem] + 1;
-    } else {
-      scores.hotStreak[player] = [1];
+
+      // Prevents endless number of 0's for endless incorrect guesses
+      if (scores.hotStreak[player][lastItem] !== 0) {
+        scores.hotStreak[player].push(0);
+      }
     }
-  }
-  if (!correct && scores.hotStreak[player] && !claimed) {
-    const lastItem = scores.hotStreak[player].length - 1;
 
-    // Prevents endless number of 0's for endless incorrect guesses
-    if (scores.hotStreak[player][lastItem] !== 0) {
-      scores.hotStreak[player].push(0);
-    }
-  }
+    // Longest word
+    // if (puzzleIsComplete) {
+    //   const longestWord = findLongestWord(mappings, scores);
 
-  // Longest word
-  // if (puzzleIsComplete) {
-  //   const longestWord = findLongestWord(mappings, scores);
+    //   Object.entries(scores.claimedGuessesLookup).forEach(entry => {
+    //     const [person, values] = entry;
+    //     // values = [1,2,3]
+    //     // person = 'ben'
 
-  //   Object.entries(scores.claimedGuessesLookup).forEach(entry => {
-  //     const [person, values] = entry;
-  //     // values = [1,2,3]
-  //     // person = 'ben'
+    //     // check each number in positions and if it exists in person's values
+    //     let successfulMapping = false;
+    //     for (const position of longestWord.positions) {
+    //       if (values.includes(position)) {
+    //         successfulMapping = true;
+    //       } else {
+    //         successfulMapping = false;
+    //         // break;
+    //         // ^ is this mportant?
+    //       }
+    //     }
 
-  //     // check each number in positions and if it exists in person's values
-  //     let successfulMapping = false;
-  //     for (const position of longestWord.positions) {
-  //       if (values.includes(position)) {
-  //         successfulMapping = true;
-  //       } else {
-  //         successfulMapping = false;
-  //         // break;
-  //         // ^ is this important?
-  //       }
-  //     }
+    //     if (successfulMapping) {
+    //       scores.longestWord[person] = longestWord.word;
+    //     } else {
+    //       scores.longestWord['2+ people'] = longestWord.word;
+    //     }
+    //   })
+    // }
 
-  //     if (successfulMapping) {
-  //       scores.longestWord[person] = longestWord.word;
-  //     } else {
-  //       scores.longestWord['2+ people'] = longestWord.word;
-  //     }
-  //   })
-  // }
+    // Case: Thief
+    if (puzzleIsComplete) {
+      // Let's start with across
+      const thiefScores = {};
 
-  // Case: Thief
-  if (puzzleIsComplete) {
-    // Let's start with across
-    const thiefScores = {};
+      Object.entries(scores.claimedGuessesLookup).forEach((entry) => {
+        const [person, values] = entry;
+        let thiefScore = 0;
 
-    Object.entries(scores.claimedGuessesLookup).forEach((entry) => {
-      const [person, values] = entry;
-      let thiefScore = 0;
+        const wordMappings = [...mappings.across, ...mappings.down];
 
-      const wordMappings = [...mappings.across, ...mappings.down];
+        // Map over each word...
+        wordMappings.map((mapping) => {
+          // positions = ie [0, 1, 2, 3]
+          let lettersAnsweredInWord = 0;
+          const positions = Object.values(mapping)[0];
 
-      // Map over each word...
-      wordMappings.map((mapping) => {
-        // positions = ie [0, 1, 2, 3]
-        let lettersAnsweredInWord = 0;
-        const positions = Object.values(mapping)[0];
+          // Map over each letter in word...
+          positions.map((position) => {
+            if (values.includes(position)) {
+              lettersAnsweredInWord++;
+            }
+          });
 
-        // Map over each letter in word...
-        positions.map((position) => {
-          if (values.includes(position)) {
-            lettersAnsweredInWord++;
+          if (lettersAnsweredInWord === 1) {
+            thiefScore++;
           }
         });
 
-        if (lettersAnsweredInWord === 1) {
-          thiefScore++;
-        }
+        thiefScores[person] = thiefScore;
+      });
+      scores.thief = thiefScores;
+    }
+
+    // Case: Benchwarmer
+    if (puzzleIsComplete) {
+      let benchwarmerScores = {};
+      Object.entries(scores.claimedGuessesLookup).forEach((entry) => {
+        const [person, values] = entry;
+        benchwarmerScores[person] = values.length;
       });
 
-      thiefScores[person] = thiefScore;
-    });
-    scores.thief = thiefScores;
-  }
+      scores.benchwarmer = benchwarmerScores;
+    }
 
-  // Case: Benchwarmer
-  if (puzzleIsComplete) {
-    let benchwarmerScores = {};
-    Object.entries(scores.claimedGuessesLookup).forEach((entry) => {
-      const [person, values] = entry;
-      benchwarmerScores[person] = values.length;
-    });
+    // Case: Workhorse
+    if (puzzleIsComplete) {
+      let workhorseScores = {};
+      Object.entries(scores.claimedGuessesLookup).forEach((entry) => {
+        const [person, values] = entry;
+        workhorseScores[person] = values.length;
+      });
+      scores.workhorse = workhorseScores;
+    }
 
-    scores.benchwarmer = benchwarmerScores;
-  }
+    // Check if puzzle is complete AND the last answer was correct
+    // TODO: This actually might not provide the 100% correct completed_at time -- puzzle should
+    // only be complete if THERE ARE NO INCORRECTS
+    if (incorrects.length === 0 && puzzleIsComplete) {
+      const completed = new Date();
+      return { completed: completed };
+    }
 
-  // Case: Workhorse
-  if (puzzleIsComplete) {
-    let workhorseScores = {};
-    Object.entries(scores.claimedGuessesLookup).forEach((entry) => {
-      const [person, values] = entry;
-      workhorseScores[person] = values.length;
-    });
-    scores.workhorse = workhorseScores;
-  }
+    if (incorrects.length > 0 && puzzleIsComplete) {
+      const filled = new Date();
+      return { filled: filled };
+    }
 
-  // Check if puzzle is complete AND the last answer was correct
-  // TODO: This actually might not provide the 100% correct completed_at time -- puzzle should
-  // only be complete if THERE ARE NO INCORRECTS
-  if (correct && puzzleIsComplete) {
-    const completed_at = new Date();
-    return completed_at;
+    return false;
   }
 };
 

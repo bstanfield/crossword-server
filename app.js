@@ -4,10 +4,10 @@ const socketIo = require("socket.io");
 const {
   findNewPuzzle,
   createDownAndAcrossWordGroupings,
-  checkIfLetterAddsToScore
-} = require('./data');
-const db = require('./db');
-const { getValidKeys } = require('./db');
+  checkIfLetterAddsToScore,
+} = require("./data");
+const db = require("./db");
+const { getValidKeys } = require("./db");
 
 const port = process.env.PORT || 4001;
 const index = require("./routes/index");
@@ -26,22 +26,23 @@ const io = socketIo(server, {
   },
 });
 
-const instantiateGuesses = (grid) => grid.map(item => {
-  if (item === '.') {
-    return false
-  } else {
-    return ''
-  }
-})
+const instantiateGuesses = (grid) =>
+  grid.map((item) => {
+    if (item === ".") {
+      return false;
+    } else {
+      return "";
+    }
+  });
 
 const getPuzzle = async (day, daily, dateRange) => {
-  const board = await findNewPuzzle(day || 'Monday', daily, dateRange);
-  const { grid } = board
+  const board = await findNewPuzzle(day || "Monday", daily, dateRange);
+  const { grid } = board;
   if (grid === null) {
-    console.log('Error getting puzzle!');
+    console.log("Error getting puzzle!");
     return false;
   }
-  const guesses = instantiateGuesses(grid)
+  const guesses = instantiateGuesses(grid);
   const { across, down } = createDownAndAcrossWordGroupings(board);
 
   return {
@@ -88,10 +89,10 @@ const getPuzzle = async (day, daily, dateRange) => {
       },
       benchwarmer: {
         // mimi: 20
-      }
-    }
-  }
-}
+      },
+    },
+  };
+};
 
 // Move to Heroku env
 const randomColors = ["green", "purple", "blue", "orange"];
@@ -104,7 +105,7 @@ const startSocketServer = async () => {
   // This will hold all active puzzle boards
   // TODO: Expire puzzles
   let puzzles = {};
-  const validKeys = (await getValidKeys()).map(key => key.name);
+  const validKeys = (await getValidKeys()).map((key) => key.name);
 
   io.on("connection", async (socket) => {
     console.log("New client: ", socket.id);
@@ -118,75 +119,98 @@ const startSocketServer = async () => {
 
       // If the room doesn't have a puzzle yet, create one
       if (!puzzles[room]) {
+        console.log("creating puzzle");
         // No puzzle in memory, but maybe in DB?
         let puzzle;
         let puzzleFromDB;
         try {
           puzzleFromDB = await db.getPuzzle(room);
           // Catch for old puzzles without scores
-          if (!puzzleFromDB[0].scores || !puzzleFromDB[0].scores.claimedGuessesLookup) {
+          if (
+            !puzzleFromDB[0].scores ||
+            !puzzleFromDB[0].scores.claimedGuessesLookup
+          ) {
             puzzleFromDB = [];
           }
         } catch (err) {
-          console.log('ERROR: ', err)
+          console.log("ERROR: ", err);
         }
 
         if (puzzleFromDB.length > 0) {
-          puzzleFromDB[0].guesses = JSON.parse(puzzleFromDB[0].guesses)
+          puzzleFromDB[0].guesses = JSON.parse(puzzleFromDB[0].guesses);
           puzzle = puzzleFromDB[0];
         } else {
           // This will grab today's puzzle!
           puzzle = await getPuzzle(null, true);
 
           try {
-            db.insertPuzzle(puzzle.created_at, puzzle.completed_at, room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
+            db.insertPuzzle(
+              puzzle.created_at,
+              puzzle.completed_at,
+              room,
+              puzzle.board,
+              puzzle.mappings,
+              puzzle.guesses,
+              puzzle.scores
+            );
           } catch (err) {
-            console.log('ERROR: ', err)
+            console.log("ERROR: ", err);
           }
         }
 
-        puzzles[room] = puzzle
+        puzzles[room] = puzzle;
       }
 
       // Send stuff down to new client
-      console.log(socket.id, 'joining ', room)
-      socket.join(room)
+      console.log(socket.id, "joining ", room);
+      socket.join(room);
 
       // TODO: Combine
       socket.emit("board", puzzles[room].board);
       socket.emit("guesses", puzzles[room].guesses);
+      // console.log("sending scores: ", puzzles[room].scores);
       socket.emit("scores", puzzles[room].scores);
 
       socket.emit("id", socket.id);
       socket.emit("timestamp", puzzles[room].created_at);
-      console.log("Sending completed_at: ", puzzles[room].completed_at)
+      console.log("Sending completed_at: ", puzzles[room].completed_at);
       socket.emit("completed", puzzles[room].completed_at); // might still be null -- that's OK
+      socket.emit("filled", puzzles[room].filled_at); // might still be null -- that's OK
 
       // Add client to list of clients
-      connectedClients[socket.id] = { ...connectedClients[socket.id], ...{ room, name: 'Anon' } };
+      connectedClients[socket.id] = {
+        ...connectedClients[socket.id],
+        ...{ room, name: "Anon" },
+      };
 
       // Count clients in room
-      let count = 0
+      let count = 0;
       for (const [key, value] of Object.entries(connectedClients)) {
         if (value.room === room) {
-          count++
+          count++;
         }
       }
 
       // Tell everyone in the room about the new client
       io.to(room).emit("newPlayer", count);
-    })
+    });
 
     socket.on("name", (name) => {
       if (name) {
-        console.log(socket.id, ' name is ', name);
-        connectedClients[socket.id] = { ...connectedClients[socket.id], ...{ name } };
+        console.log(socket.id, " name is ", name);
+        connectedClients[socket.id] = {
+          ...connectedClients[socket.id],
+          ...{ name },
+        };
       }
-    })
+    });
 
     // Room agnostic code
     // Assigns a color for the client
-    connectedClients[socket.id] = { ...connectedClients[socket.id], ...{ color: randomColors[assignedColors] } };
+    connectedClients[socket.id] = {
+      ...connectedClients[socket.id],
+      ...{ color: randomColors[assignedColors] },
+    };
     assignedColors++;
 
     // hardcoded to number of randomColors
@@ -200,53 +224,76 @@ const startSocketServer = async () => {
 
       // Catch for out-of-sync name
       if (name !== connectedClients[socket.id].name) {
-        console.log(name, 'is not ', connectedClients[socket.id].name)
-        connectedClients[socket.id].name = name
+        console.log(name, "is not ", connectedClients[socket.id].name);
+        connectedClients[socket.id].name = name;
       }
 
       // Registers a square input letter change
       if (type === "input") {
         const { position, letter, iterator } = value;
-        const correctLetter = puzzles[room] ? puzzles[room].board.grid[position - 1] : '?';
+        const correctLetter = puzzles[room]
+          ? puzzles[room].board.grid[position - 1]
+          : "?";
+
+        puzzles[room].guesses[position - 1] = letter;
 
         // Check if input is actually a letter, and then if correct/incorrect
         // Checks if guess tile has already been correctly guessed by someone
-        if (
-          letter !== ''
-        ) {
-          if (
-            correctLetter &&
-            correctLetter.toLowerCase() === letter
-          ) {
-            const completed = checkIfLetterAddsToScore(puzzles[room], name, position, letter, true);
-            if (completed) {
-              console.log('****PUZZLE COMPLETE****');
-              puzzles[room].completed_at = completed;
+        if (letter !== "") {
+          if (correctLetter && correctLetter.toLowerCase() === letter) {
+            const result = checkIfLetterAddsToScore(
+              puzzles[room],
+              name,
+              position,
+              letter,
+              true
+            );
+
+            if (result && result.completed) {
+              console.log("****PUZZLE COMPLETE****");
+              puzzles[room].completed_at = result.completed;
               io.to(room).emit("completed", puzzles[room].completed_at);
-              db.insertCompletionTimestamp(room, completed);
+              db.insertCompletionTimestamp(room, result.completed);
+            } else if (result && result.filled) {
+              console.log("PUZZLE FILLED");
+              puzzles[room].filled_at = result.filled;
+              io.to(room).emit("filled", puzzles[room].filled_at);
             }
           } else {
-            checkIfLetterAddsToScore(puzzles[room], name, position, letter, false);
+            const result = checkIfLetterAddsToScore(
+              puzzles[room],
+              name,
+              position,
+              letter,
+              false
+            );
+
+            if (result && result.filled) {
+              console.log("PUZZLE FILLED");
+              puzzles[room].filled_at = result.filled;
+              io.to(room).emit("filled", puzzles[room].filled_at);
+            }
           }
+          // console.log("emitting scores ", puzzles[room].scores);
           io.to(room).emit("scores", puzzles[room].scores);
         }
 
-        puzzles[room].guesses[position - 1] = letter;
         socket.to(room).emit("inputChange", { position: position - 1, letter });
+        io.in(room).emit("guesses", puzzles[room].guesses);
 
         // Register guess in DB
         try {
           db.updateGame(room, puzzles[room].guesses, puzzles[room].scores);
         } catch (err) {
-          console.log('ERROR: ', err)
+          console.log("ERROR: ", err);
         }
       }
 
       if (type === "newPuzzle") {
         const { dow, daily, dateRange } = value;
-        console.log('New puzzle requested for room ', room);
-        console.log('Day requested: ', dow);
-        console.log('Do they want todays crossword? ', daily);
+        console.log("New puzzle requested for room ", room);
+        console.log("Day requested: ", dow);
+        console.log("Do they want todays crossword? ", daily);
         console.log("What's the date range? ", dateRange);
 
         // Loading state for everyone in room
@@ -255,9 +302,17 @@ const startSocketServer = async () => {
         puzzles[room] = puzzle;
 
         try {
-          db.insertPuzzle(puzzle.created_at, puzzle.completed_at, room, puzzle.board, puzzle.mappings, puzzle.guesses, puzzle.scores)
+          db.insertPuzzle(
+            puzzle.created_at,
+            puzzle.completed_at,
+            room,
+            puzzle.board,
+            puzzle.mappings,
+            puzzle.guesses,
+            puzzle.scores
+          );
         } catch (err) {
-          console.log('ERROR: ', err)
+          console.log("ERROR: ", err);
         }
 
         io.in(room).emit("guesses", puzzles[room].guesses);
@@ -280,7 +335,13 @@ const startSocketServer = async () => {
       // Sends highlight information for clients
       if (type === "newHighlight") {
         const { color, name } = connectedClients[socket.id];
-        clientsHighlights[socket.id] = { squares: value, color, room, name, id: socket.id };
+        clientsHighlights[socket.id] = {
+          squares: value,
+          color,
+          room,
+          name,
+          id: socket.id,
+        };
 
         socket.to(room).emit("newHighlight", clientsHighlights);
       }
@@ -288,18 +349,18 @@ const startSocketServer = async () => {
 
     socket.on("disconnect", () => {
       const clientToDelete = connectedClients[socket.id];
-      console.log(socket.id, ' left ', clientToDelete.room)
+      console.log(socket.id, " left ", clientToDelete.room);
       if (clientToDelete) {
         // Check room before deleting
-        const room = clientToDelete.room
+        const room = clientToDelete.room;
         delete connectedClients[socket.id];
         delete clientsHighlights[socket.id];
 
         // Recount clients in room
-        let count = 0
+        let count = 0;
         for (const [key, value] of Object.entries(connectedClients)) {
           if (value.room === room) {
-            count++
+            count++;
           }
         }
         io.to(room).emit("newPlayer", count);
@@ -309,7 +370,7 @@ const startSocketServer = async () => {
       }
     });
   });
-}
+};
 
 startSocketServer();
 
