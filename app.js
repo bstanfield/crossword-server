@@ -175,6 +175,7 @@ const startSocketServer = async () => {
       socket.emit("timestamp", puzzles[room].created_at);
       console.log("Sending completed_at: ", puzzles[room].completed_at);
       socket.emit("completed", puzzles[room].completed_at); // might still be null -- that's OK
+      socket.emit("filled", puzzles[room].filled_at); // might still be null -- that's OK
 
       // Add client to list of clients
       connectedClients[socket.id] = {
@@ -240,28 +241,38 @@ const startSocketServer = async () => {
         // Checks if guess tile has already been correctly guessed by someone
         if (letter !== "") {
           if (correctLetter && correctLetter.toLowerCase() === letter) {
-            const completed = checkIfLetterAddsToScore(
+            const result = checkIfLetterAddsToScore(
               puzzles[room],
               name,
               position,
               letter,
               true
             );
-            // TODO: Only complete when all letters are correct
-            if (completed) {
+
+            if (result && result.completed) {
               console.log("****PUZZLE COMPLETE****");
-              puzzles[room].completed_at = completed;
+              puzzles[room].completed_at = result.completed;
               io.to(room).emit("completed", puzzles[room].completed_at);
-              db.insertCompletionTimestamp(room, completed);
+              db.insertCompletionTimestamp(room, result.completed);
+            } else if (result && result.filled) {
+              console.log("PUZZLE FILLED");
+              puzzles[room].filled_at = result.filled;
+              io.to(room).emit("filled", puzzles[room].filled_at);
             }
           } else {
-            checkIfLetterAddsToScore(
+            const result = checkIfLetterAddsToScore(
               puzzles[room],
               name,
               position,
               letter,
               false
             );
+
+            if (result && result.filled) {
+              console.log("PUZZLE FILLED");
+              puzzles[room].filled_at = result.filled;
+              io.to(room).emit("filled", puzzles[room].filled_at);
+            }
           }
           // console.log("emitting scores ", puzzles[room].scores);
           io.to(room).emit("scores", puzzles[room].scores);

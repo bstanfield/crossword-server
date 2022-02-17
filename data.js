@@ -251,7 +251,6 @@ const checkIfLetterAddsToScore = (
   // TODO: Undo
   if (true) {
     // if (puzzleIsComplete) {
-    console.log("counting incorrects");
     let incorrects = [];
     board.grid.map((letter, index) => {
       if (letter === "." || guesses[index] === ".") {
@@ -266,7 +265,6 @@ const checkIfLetterAddsToScore = (
 
       // TODO: Compare each spot in grid with user guesses. Send back incomplete grid positions
     });
-    console.log("incorrects: ", incorrects);
     scores.incorrects = incorrects;
 
     // Claimed Guesses
@@ -438,10 +436,17 @@ const checkIfLetterAddsToScore = (
     // Check if puzzle is complete AND the last answer was correct
     // TODO: This actually might not provide the 100% correct completed_at time -- puzzle should
     // only be complete if THERE ARE NO INCORRECTS
-    if (correct && puzzleIsComplete) {
-      const completed_at = new Date();
-      return completed_at;
+    if (incorrects.length === 0 && puzzleIsComplete) {
+      const completed = new Date();
+      return { completed: completed };
     }
+
+    if (incorrects.length > 0 && puzzleIsComplete) {
+      const filled = new Date();
+      return { filled: filled };
+    }
+
+    return false;
   }
 };
 
