@@ -167,8 +167,9 @@ const startSocketServer = async () => {
 
       // TODO: Combine
       socket.emit("board", puzzles[room].board);
+
       socket.emit("guesses", puzzles[room].guesses);
-      // console.log("sending scores: ", puzzles[room].scores);
+
       socket.emit("scores", puzzles[room].scores);
 
       socket.emit("id", socket.id);
@@ -274,12 +275,14 @@ const startSocketServer = async () => {
               io.to(room).emit("filled", puzzles[room].filled_at);
             }
           }
-          // console.log("emitting scores ", puzzles[room].scores);
+
           io.to(room).emit("scores", puzzles[room].scores);
         }
 
         socket.to(room).emit("inputChange", { position: position - 1, letter });
-        io.in(room).emit("guesses", puzzles[room].guesses);
+
+        // Sends guesses to everyone *except* source client
+        socket.to(room).emit("guesses", puzzles[room].guesses);
 
         // Register guess in DB
         try {

@@ -257,9 +257,7 @@ const checkIfLetterAddsToScore = (
         return;
       }
 
-      // TODO: Should this actually not compare to guesses[index] but the cold hard truth?
       if (letter.toLowerCase() !== guesses[index].toLowerCase()) {
-        console.log(letter, "is not", guesses[index]);
         incorrects.push(index + 1);
       }
 
