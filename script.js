@@ -2,15 +2,15 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const moment = require('moment');
 
-var a = moment('2021-05-15');
-var b = moment('2021-06-28');
+var a = moment('2022-01-01');
+var b = moment('2022-08-06');
 
 async function init() {
   for (var m = moment(a); m.diff(b, 'days') <= 0; m.add(1, 'days')) {
     console.log(m.format('L'));
     const dateToUse = m.format('L');
 
-    let url = 'https://www.xwordinfo.com/JSON/Data.aspx?format=text&date=' + dateToUse;
+    let url = 'https://www.xwordinfo.com/JSON/Data.ashx?format=text&date=' + dateToUse;
 
     let options = {
       method: 'GET',
@@ -27,6 +27,8 @@ async function init() {
         cookie: 'ASP.NET_SessionId=rma4cngoytmp2gcyf5a2gs3l; ARRAffinity=b84cfd8a83b6d9093e8bb66a11c64ff85f40266f8f5aeef3fc332cffffb9d643; WAWebSiteSID=cef7c92e37d141f0b5bb8ef1e074db95; '
       }
     };
+
+    console.log('hitting URL: ', url);
 
     fetch(url, options)
       .then(res => res.json())
