@@ -2,6 +2,8 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const moment = require('moment');
 
+// Modify these dates to download new crosswords locally.
+
 var a = moment('2022-01-01');
 var b = moment('2022-08-06');
 
