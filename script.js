@@ -4,12 +4,11 @@ const moment = require('moment');
 
 // Modify these dates to download new crosswords locally.
 
-var a = moment('2022-08-06');
-var b = moment('2022-08-07');
+var a = moment('2021-01-12');
+var b = moment('2021-12-31');
 
 async function init() {
   for (var m = moment(a); m.diff(b, 'days') <= 0; m.add(1, 'days')) {
-    console.log(m.format('L'));
     const dateToUse = m.format('L');
 
     let url = 'https://www.xwordinfo.com/JSON/Data.ashx?format=text&date=' + dateToUse;
@@ -76,9 +75,9 @@ async function init() {
               })
 
               if (fs.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
-                console.log('File exists already.')
+                console.log(m.format('L'), 'File exists already.')
               } else if (fs.existsSync('./crosswords/' + year + '/' + month + '/' + `0${day}` + '.json')) {
-                console.log('File exists already.')
+                console.log(m.format('L'), 'File exists already.')
               } else {
                 fs.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json), (error) => {
                   if (error) {
@@ -91,7 +90,7 @@ async function init() {
 
             } else {
               if (fs.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json') || fs.existsSync('./crosswords/' + year + '/' + month + '/' + `0${day}` + '.json')) {
-                console.log('File exists already.')
+                console.log(m.format('L'), 'File exists already.')
               } else {
                 fs.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json), (error) => {
                   if (error) {
