@@ -4,8 +4,8 @@ const moment = require('moment');
 
 // Modify these dates to download new crosswords locally.
 
-var a = moment('2010-01-29');
-var b = moment('2022-08-06');
+var a = moment('2022-08-06');
+var b = moment('2022-08-07');
 
 async function init() {
   for (var m = moment(a); m.diff(b, 'days') <= 0; m.add(1, 'days')) {
