@@ -4,6 +4,86 @@ const fsSync = require("fs");
 const moment = require("moment");
 const fetch = require("node-fetch");
 
+const findPuzzleBySearchString = async (string) => {
+  const filePaths = await glob("crosswords/**/*.json");
+  const cwData = await Promise.all(
+    filePaths.map((fp) => fs.readFile(fp, "utf8"))
+  );
+  
+  // All Crosswords
+  const cwJSON = cwData.map((cw) => JSON.parse(cw));
+
+  // ---
+
+
+  // Condition for string = date
+  let directDateMatch = [];
+  if (Date.parse(string)) {
+    const validMatch = cwJSON.filter(cw => Date.parse(cw.date) === Date.parse(string));
+    if (validMatch.length > 0) {
+      directDateMatch = [{
+        title: validMatch[0].title,
+        date: validMatch[0].date,
+        author: validMatch[0].author,
+        dow: validMatch[0].dow,
+        match: validMatch[0].date,
+      }]
+    }
+  }
+
+  // Condition for non-date string match
+  let stringMatches = [];
+  cwJSON.map(cw => {
+    let acrossClues = cw.clues.across.map(clue => clue.toLowerCase())
+    for (var clue of acrossClues) {
+      if (clue.includes(string.toLowerCase())) {
+        console.log('across match!');
+        stringMatches.push({
+          title: cw.title,
+          date: cw.date,
+          dow: cw.dow,
+          author: cw.author,
+          match: clue,
+        })
+        return;
+      }
+    }
+
+    let downClues = cw.clues.down.map(clue => clue.toLowerCase())
+    for (var clue of downClues) {
+      if (clue.includes(string.toLowerCase())) {
+        console.log('down match!');
+        stringMatches.push({
+          title: cw.title,
+          date: cw.date,
+          author: cw.author,
+          dow: cw.dow,
+          match: clue,
+        })
+        return;
+      }
+    }
+
+    for (var key of Object.keys(cw)) {
+      if (key !== 'date' && typeof cw[key] === 'string' && cw[key].toLowerCase().includes(string.toLowerCase())) {
+        console.log('match! ', key, cw[key]);
+        stringMatches.push({
+          title: cw.title,
+          date: cw.date,
+          author: cw.author,
+          dow: cw.dow,
+          match: cw[key],
+        })
+        return;
+      }
+    }
+  })
+
+  return {
+    matches: [...stringMatches, ...directDateMatch],
+  }
+}
+
 const findNewPuzzle = async (dow, daily, dateRange) => {
   // Grabs today's crossword.
   if (daily) {
@@ -452,4 +532,5 @@ module.exports = {
   findNewPuzzle,
   createDownAndAcrossWordGroupings,
   checkIfLetterAddsToScore,
+  findPuzzleBySearchString,
 };

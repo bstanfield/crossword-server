@@ -4,7 +4,7 @@ const moment = require('moment');
 
 // Modify these dates to download new crosswords locally.
 
-var a = moment('2022-01-01');
+var a = moment('2010-01-29');
 var b = moment('2022-08-06');
 
 async function init() {
@@ -16,27 +16,29 @@ async function init() {
 
     let options = {
       method: 'GET',
-      headers: {
-        Connection: 'keep-alive',
-        'sec-ch-ua': '" Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"',
-        'sec-ch-ua-mobile': '?0',
-        Accept: '*/*',
-        'Sec-Fetch-Site': 'cross-site',
-        'Sec-Fetch-Mode': 'no-cors',
-        'Sec-Fetch-Dest': 'empty',
-        Referer: 'http://localhost:7000/',
-        'Accept-Language': 'en-US,en;q=0.9',
-        cookie: 'ASP.NET_SessionId=rma4cngoytmp2gcyf5a2gs3l; ARRAffinity=b84cfd8a83b6d9093e8bb66a11c64ff85f40266f8f5aeef3fc332cffffb9d643; WAWebSiteSID=cef7c92e37d141f0b5bb8ef1e074db95; '
-      }
+      "headers": {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "accept-language": "en-US,en;q=0.9",
+        "cache-control": "no-cache",
+        "pragma": "no-cache",
+        "sec-ch-ua": "\".Not/A)Brand\";v=\"99\", \"Google Chrome\";v=\"103\", \"Chromium\";v=\"103\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\"",
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1",
+        "cookie": "ASP.NET_SessionId=jphhhsmu01pvz2p2qnbf2tvo",
+        "Referer": "https://www.xwordinfo.com/JSON/",
+        "Referrer-Policy": "strict-origin-when-cross-origin"
+      },
     };
 
-    console.log('hitting URL: ', url);
-
+    // Try disabling fetch and running a new fn to check what gaps there are.
     fetch(url, options)
       .then(res => res.json())
       .then(json => {
-        console.log('Adding file to directory!');
-
         const months = [
           '01',
           '02',
@@ -56,9 +58,9 @@ async function init() {
         const month = new Date(json.date).getMonth();
         const day = new Date(json.date).getDate();
 
-        console.log('Year: ', year);
-        console.log('Month: ', months[month]);
-        console.log('Day: ', day);
+        // console.log('Year: ', year);
+        // console.log('Month: ', months[month]);
+        // console.log('Day: ', day);
 
         const findOrCreateDirectory = (year, month, day) => {
           fs.access('./crosswords/' + year + '/' + month, function (error) {
@@ -73,8 +75,9 @@ async function init() {
                 }
               })
 
-              console.log('Adding JSON file...')
               if (fs.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
+                console.log('File exists already.')
+              } else if (fs.existsSync('./crosswords/' + year + '/' + month + '/' + `0${day}` + '.json')) {
                 console.log('File exists already.')
               } else {
                 fs.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json), (error) => {
@@ -87,9 +90,7 @@ async function init() {
               }
 
             } else {
-              console.log("Directory exists.")
-              console.log('Adding JSON file...')
-              if (fs.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json')) {
+              if (fs.existsSync('./crosswords/' + year + '/' + month + '/' + day + '.json') || fs.existsSync('./crosswords/' + year + '/' + month + '/' + `0${day}` + '.json')) {
                 console.log('File exists already.')
               } else {
                 fs.writeFile('./crosswords/' + year + '/' + month + '/' + day + '.json', JSON.stringify(json), (error) => {

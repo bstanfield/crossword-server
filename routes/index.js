@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { getValidKeys } = require('../db');
+const {
+  findPuzzleBySearchString
+} = require("../data");
 
 router.get("/", (req, res) => {
   res.send({ response: "I am alive" }).status(200);
@@ -17,5 +20,15 @@ router.get("/secret", async (req, res) => {
 
   res.send({ error: 'Key not valid', sent: key }).status(404);
 });
+
+router.get("/search", async (req, res) => {
+  const string = req.query.string;
+
+  console.log('searching for ', string);
+
+  const relevantPuzzlesBasedOnSearch = await findPuzzleBySearchString(string);
+
+  res.send({ puzzles: relevantPuzzlesBasedOnSearch }).status(200);
+})
 
 module.exports = router;
