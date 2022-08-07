@@ -37,7 +37,6 @@ const instantiateGuesses = (grid) =>
 
 const getPuzzle = async (day, daily, dateRange, query) => {
   const board = await findNewPuzzle(day || "Monday", daily, dateRange, query);
-  console.log('received board: ', board);
   const { grid } = board;
   if (grid === null) {
     console.log("Error getting puzzle!");
