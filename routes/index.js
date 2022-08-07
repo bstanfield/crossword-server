@@ -27,8 +27,20 @@ router.get("/search", async (req, res) => {
   console.log('searching for ', string);
 
   const relevantPuzzlesBasedOnSearch = await findPuzzleBySearchString(string);
+  const filteredPuzzles = relevantPuzzlesBasedOnSearch.matches.reduce((previous, current) => {
+    if (!previous) {
+      return [current];
+    }
+    // If the current date shows up in previous dates, skip.
+    if (previous.filter(cw => cw.date === current.date).length > 0) {
+      return previous;
+    } else {
+      previous.push(current);
+      return previous;
+    }
+  }, false);
 
-  res.send({ puzzles: relevantPuzzlesBasedOnSearch }).status(200);
+  res.send({ puzzles: filteredPuzzles }).status(200);
 })
 
 module.exports = router;

@@ -36,7 +36,6 @@ const findPuzzleBySearchString = async (string) => {
     let acrossClues = cw.clues.across.map(clue => clue.toLowerCase())
     for (var clue of acrossClues) {
       if (clue.includes(string.toLowerCase())) {
-        console.log('across match!');
         stringMatches.push({
           title: cw.title,
           date: cw.date,
@@ -51,7 +50,6 @@ const findPuzzleBySearchString = async (string) => {
     let downClues = cw.clues.down.map(clue => clue.toLowerCase())
     for (var clue of downClues) {
       if (clue.includes(string.toLowerCase())) {
-        console.log('down match!');
         stringMatches.push({
           title: cw.title,
           date: cw.date,
@@ -65,7 +63,6 @@ const findPuzzleBySearchString = async (string) => {
 
     for (var key of Object.keys(cw)) {
       if (key !== 'date' && typeof cw[key] === 'string' && cw[key].toLowerCase().includes(string.toLowerCase())) {
-        console.log('match! ', key, cw[key]);
         stringMatches.push({
           title: cw.title,
           date: cw.date,
@@ -83,7 +80,7 @@ const findPuzzleBySearchString = async (string) => {
   }
 }
 
-const findNewPuzzle = async (dow, daily, dateRange) => {
+const findNewPuzzle = async (dow, daily, dateRange, query) => {
   // Grabs today's crossword.
   if (daily) {
     const date = new Date();
@@ -196,16 +193,31 @@ const findNewPuzzle = async (dow, daily, dateRange) => {
     );
     const cwJSON = cwData.map((cw) => JSON.parse(cw));
 
-    const filterCrosswordsByDate = (crosswords, minDate) =>
+    const filterCrosswordsByDate = (crosswords, minDate, query) =>
       crosswords.filter((cw) => {
         const cwDate = new Date(cw.date);
         const minimumDate = new Date(minDate);
+
+        // Has to be exact match if query = true
+        if (query) {
+          if (Date.parse(cwDate) === Date.parse(minimumDate)) {
+            return true;
+          } 
+          return false;
+        }
 
         if (cwDate > minimumDate) return true;
         return false;
       });
 
     let relevantCrosswords = cwJSON;
+    // This selects a specifc queried crossword
+    // i.e. query = 1/17/2000
+    if (query) {
+      relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, query, true);
+      return relevantCrosswords[0];
+    }
+
     if (dateRange) {
       if (dateRange === "2022") {
         relevantCrosswords = filterCrosswordsByDate(relevantCrosswords, "2022");

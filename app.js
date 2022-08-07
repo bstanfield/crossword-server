@@ -35,8 +35,9 @@ const instantiateGuesses = (grid) =>
     }
   });
 
-const getPuzzle = async (day, daily, dateRange) => {
-  const board = await findNewPuzzle(day || "Monday", daily, dateRange);
+const getPuzzle = async (day, daily, dateRange, query) => {
+  const board = await findNewPuzzle(day || "Monday", daily, dateRange, query);
+  console.log('received board: ', board);
   const { grid } = board;
   if (grid === null) {
     console.log("Error getting puzzle!");
@@ -293,15 +294,16 @@ const startSocketServer = async () => {
       }
 
       if (type === "newPuzzle") {
-        const { dow, daily, dateRange } = value;
+        const { dow, daily, dateRange, query } = value;
         console.log("New puzzle requested for room ", room);
+        console.log("Direct query: ", query);
         console.log("Day requested: ", dow);
         console.log("Do they want todays crossword? ", daily);
         console.log("What's the date range? ", dateRange);
 
         // Loading state for everyone in room
         io.in(room).emit("loading", true);
-        const puzzle = await getPuzzle(dow, daily, dateRange);
+        const puzzle = await getPuzzle(dow, daily, dateRange, query);
         puzzles[room] = puzzle;
 
         try {
