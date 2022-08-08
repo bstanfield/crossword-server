@@ -294,6 +294,7 @@ const startSocketServer = async () => {
 
       if (type === "newPuzzle") {
         const { dow, daily, dateRange, query } = value;
+        console.log('-- NEW VERSION --');
         console.log("New puzzle requested for room ", room);
         console.log("Direct query: ", query);
         console.log("Day requested: ", dow);
