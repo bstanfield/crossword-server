@@ -12,8 +12,10 @@ const findPuzzleBySearchString = async (string) => {
   // All Crosswords
   const cwJSON = cwData.map((cw) => JSON.parse(cw));
 
-  // ---
-
+  // Special condition to return all puzzles
+  if (string === '*') {
+    return { matches: cwJSON.sort((a, b) => Date.parse(a.date) < Date.parse(b.date)) };
+  }
 
   // Condition for string = date
   let directDateMatch = [];
@@ -26,6 +28,7 @@ const findPuzzleBySearchString = async (string) => {
         author: validMatch[0].author,
         dow: validMatch[0].dow,
         match: validMatch[0].date,
+        jnotes: validMatch[0].jnotes,
       }]
     }
   }
@@ -42,6 +45,7 @@ const findPuzzleBySearchString = async (string) => {
           dow: cw.dow,
           author: cw.author,
           match: clue,
+          jnotes: cw.jnotes,
         })
         return;
       }
@@ -56,19 +60,21 @@ const findPuzzleBySearchString = async (string) => {
           author: cw.author,
           dow: cw.dow,
           match: clue,
+          jnotes: cw.jnotes,
         })
         return;
       }
     }
 
     for (var key of Object.keys(cw)) {
-      if (key !== 'date' && typeof cw[key] === 'string' && cw[key].toLowerCase().includes(string.toLowerCase())) {
+      if (key !== 'date' && key !== 'jnotes' && typeof cw[key] === 'string' && cw[key].toLowerCase().includes(string.toLowerCase())) {
         stringMatches.push({
           title: cw.title,
           date: cw.date,
           author: cw.author,
           dow: cw.dow,
           match: cw[key],
+          jnotes: cw.jnotes,
         })
         return;
       }
