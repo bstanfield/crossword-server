@@ -282,7 +282,7 @@ const startSocketServer = async () => {
         socket.to(room).emit("inputChange", { position: position - 1, letter });
 
         // Sends guesses to everyone *except* source client
-        socket.to(room).emit("guesses", puzzles[room].guesses);
+        // socket.to(room).emit("guesses", puzzles[room].guesses);
 
         // Register guess in DB
         try {
