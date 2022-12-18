@@ -11,10 +11,11 @@ const findPuzzleBySearchString = async (string) => {
   );
   // All Crosswords
   const cwJSON = cwData.map((cw) => JSON.parse(cw));
+  const recentPuzzles = cwJSON.slice(-30).sort((a, b) => Date.parse(b) - Date.parse(a));
 
-  // Special condition to return all puzzles
+  // Special condition to return most recent 60 puzzles
   if (string === '*') {
-    return { matches: cwJSON.sort((a, b) => Date.parse(a.date) < Date.parse(b.date)) };
+    return { matches: recentPuzzles };
   }
 
   // Condition for string = date
