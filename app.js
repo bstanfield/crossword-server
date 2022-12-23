@@ -231,7 +231,8 @@ const startSocketServer = async () => {
 
       // Registers a square input letter change
       if (type === "input") {
-        const { position, letter, iterator } = value;
+        const { position, letter } = value;
+      
         const correctLetter = puzzles[room]
           ? puzzles[room].board.grid[position - 1]
           : "?";
@@ -285,6 +286,34 @@ const startSocketServer = async () => {
         // socket.to(room).emit("guesses", puzzles[room].guesses);
 
         // Register guess in DB
+        // This commented out stuff is for debugging scores
+        // const { claimedGuesses,
+        //   claimedGuessesLookup,
+        //   incorrectGuesses,
+        //   editor,
+        //   workhorse,
+        //   longestWord,
+        //   finishingBlow,
+        //   hotStreak,
+        //   toughLetters,
+        //   thief,
+        //   highestAccuracy,
+        //   benchwarmer
+        // } = puzzles[room].scores;
+        // const abbreviateScoreForOutput = {
+        //   claimedGuesses,
+        //   claimedGuessesLookup,
+        //   incorrectGuesses,
+        //   editor,
+        //   workhorse,
+        //   longestWord,
+        //   finishingBlow,
+        //   hotStreak,
+        //   toughLetters,
+        //   thief,
+        //   highestAccuracy,
+        //   benchwarmer,
+        // }
         try {
           db.updateGame(room, puzzles[room].guesses, puzzles[room].scores);
         } catch (err) {
