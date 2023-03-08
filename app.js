@@ -383,7 +383,7 @@ const startSocketServer = async () => {
 
     socket.on("disconnect", () => {
       const clientToDelete = connectedClients[socket.id];
-      console.log(socket.id, " left ", clientToDelete.room);
+      console.log(socket.id, " left ", clientToDelete.game);
       if (clientToDelete) {
         // Check room before deleting
         const room = clientToDelete.room;
