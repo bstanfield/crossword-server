@@ -2,24 +2,9 @@ const express = require("express");
 const router = express.Router();
 const { getValidKeys } = require("../db");
 const { findPuzzleBySearchString } = require("../data");
-const { exec } = require("child_process");
 
 router.get("/", (req, res) => {
   res.send({ response: "I am alive" }).status(200);
-});
-
-router.get("/run-script", (req, res) => {
-  exec(`node ${__dirname}/../script.js`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return res
-        .status(500)
-        .send({ error: `Script execution failed: ${error.message}` });
-    }
-    console.log(`stdout: ${stdout}`);
-    console.error(`stderr: ${stderr}`);
-    res.send({ message: "Script executed successfully", output: stdout });
-  });
 });
 
 router.get("/secret", async (req, res) => {
