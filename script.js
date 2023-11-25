@@ -96,8 +96,11 @@ async function init() {
     await sleep(2000);
   }
 
-  // Push changes to GitHub
-  if (newFilesAdded) {
+  // Check if there are changes to commit
+  const status = execSync("git status --porcelain").toString();
+
+  if (status) {
+    // If there are changes, proceed with add, commit, and push
     try {
       execSync("git add .");
       execSync('git commit -m "New crossword puzzles added"');
@@ -106,7 +109,7 @@ async function init() {
       console.error("Failed to push to GitHub:", error);
     }
   } else {
-    console.log("No new files added. Skipping Git push.");
+    console.log("No changes to commit. Skipping Git push.");
   }
 }
 
