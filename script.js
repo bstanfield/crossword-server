@@ -22,9 +22,30 @@ try {
   console.error("Error setting up Git remote URL:", error);
 }
 
+// Function to find the most recent crossword date
+function findMostRecentCrosswordDate() {
+  const years = fs.readdirSync("./crosswords").sort((a, b) => b - a);
+  for (const year of years) {
+    const months = fs.readdirSync(`./crosswords/${year}`).sort((a, b) => b - a);
+    for (const month of months) {
+      const days = fs
+        .readdirSync(`./crosswords/${year}/${month}`)
+        .map((file) => parseInt(file, 10))
+        .sort((a, b) => b - a);
+      if (days.length > 0) {
+        const latestDay = days[0];
+        return moment(`${year}-${month}-${latestDay}`, "YYYY-MM-DD");
+      }
+    }
+  }
+  return moment(); // Return current date if no files are found
+}
+
 // Define dates for fetching crosswords
-var startDate = moment("2023-11-17");
-var endDate = moment("2023-11-24");
+var startDate = findMostRecentCrosswordDate();
+var endDate = moment(); // Today's date
+
+let newFilesAdded = false; // Flag to track if new files are added
 
 async function init() {
   for (
@@ -64,7 +85,7 @@ async function init() {
       const json = await response.json();
 
       const year = new Date(json.date).getFullYear();
-      const month = new Date(json.date).getMonth();
+      const month = new Date(json.date).getMonth() + 1; // Adding 1 since getMonth() returns 0-11
       const day = new Date(json.date).getDate();
 
       findOrCreateDirectory(year, month, day, json);
@@ -76,18 +97,22 @@ async function init() {
   }
 
   // Push changes to GitHub
-  try {
-    execSync("git add .");
-    execSync('git commit -m "New crossword puzzles added"');
-    execSync("git push");
-  } catch (error) {
-    console.error("Failed to push to GitHub:", error);
+  if (newFilesAdded) {
+    try {
+      execSync("git add .");
+      execSync('git commit -m "New crossword puzzles added"');
+      execSync("git push");
+    } catch (error) {
+      console.error("Failed to push to GitHub:", error);
+    }
+  } else {
+    console.log("No new files added. Skipping Git push.");
   }
 }
 
 function findOrCreateDirectory(year, month, day, json) {
   const dirPath = `./crosswords/${year}/${String(month).padStart(2, "0")}`;
-  const filePath = `${dirPath}/${String(day).padStart(2, "0")}.json`;
+  const filePath = `${dirPath}/${day}.json`; // No zero padding for day
 
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -96,6 +121,7 @@ function findOrCreateDirectory(year, month, day, json) {
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, JSON.stringify(json, null, 2));
     console.log(`File added: ${filePath}`);
+    newFilesAdded = true;
   } else {
     console.log(`File already exists: ${filePath}`);
   }
