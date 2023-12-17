@@ -1,0 +1,49 @@
+{
+  "valid": false,
+  "title": null,
+  "date": "2023-12-18",
+  "author": null,
+  "editor": null,
+  "publisher": null,
+  "copyright": null,
+  "notepad": null,
+  "jnotes": null,
+  "key": null,
+  "track": null,
+  "autowrap": null,
+  "mini": null,
+  "id": null,
+  "id2": null,
+  "code": null,
+  "dow": null,
+  "type": null,
+  "target": null,
+  "hastitle": false,
+  "navigate": false,
+  "hold": false,
+  "auto": false,
+  "uniclue": false,
+  "interpretcolors": false,
+  "shadecircles": false,
+  "admin": false,
+  "json": false,
+  "size": {
+    "rows": 0,
+    "cols": 0
+  },
+  "grid": null,
+  "gridnums": null,
+  "circles": null,
+  "acrossmap": null,
+  "downmap": null,
+  "rbars": null,
+  "bbars": null,
+  "clues": {
+    "across": [],
+    "down": []
+  },
+  "answers": {
+    "across": [],
+    "down": []
+  }
+}
